@@ -43,3 +43,17 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         location_bounds = (-8.61, -8.5, 41.1, 41.7)
         self.assertEqual(location_bounds, dataset.location_bounds)
 
+    def test_create_from_csv(self):
+        path = "tests/resources/test-taxi-dataset.csv"
+
+        correct_path_dataset = TaxiServiceTrajectoryDataset.create_from_csv(path)
+        self.assertTrue(isinstance(correct_path_dataset, TaxiServiceTrajectoryDataset))
+
+        correct_path_dataset_small = TaxiServiceTrajectoryDataset.create_from_csv(path, limit=100)
+        self.assertEqual(correct_path_dataset_small.data_frame.shape[0], 100)
+
+        # test wrong file type by slicing the last character off
+        self.assertRaises(AssertionError, lambda: TaxiServiceTrajectoryDataset.create_from_csv(path[:-1]))
+
+        # test wrong path by slicing the first character off
+        self.assertRaises(FileNotFoundError, lambda: TaxiServiceTrajectoryDataset.create_from_csv(path[1:]))

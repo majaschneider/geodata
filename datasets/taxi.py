@@ -7,6 +7,7 @@ import datetime
 
 import torch
 import numpy as np
+import pandas as pd
 from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
@@ -187,5 +188,41 @@ class TaxiServiceTrajectoryDataset(Dataset):
         latitude_max = max(data_frame["route"].apply(lambda x: max([p.y_lat for p in Route(x)])))
         return longitude_min, longitude_max, latitude_min, latitude_max
 
+    @classmethod
+    def create_from_csv(cls, path, limit=None):
+        """
+        Initializes a TaxiServiceTrajectoryDataset by reading from a csv. If size is given, only the first lines are
+        read. The csv file should at least have the columns mentioned in TaxiServiceTrajectoryDataset.__init__():
+            TRIP_ID: (String)
+            CALL_TYPE: (char)
+            ORIGIN_CALL: (integer)
+            ORIGIN_STAND: (integer)
+            TAXI_ID: (integer)
+            TIMESTAMP: (integer)
+            DAYTYPE: (char)
+            MISSING_DATA: (Boolean)
+            POLYLINE: (String)
 
-# todo: write import methods
+        Parameters
+        ----------
+        path : str
+            Relative path to a csv file containing data required for a TaxiServiceTrajectoryDataset.
+        limit : int
+            Number of lines from the file that should be read. If None, the whole file while be read.
+
+        Returns
+        -------
+        TaxiServiceTrajectoryDataset
+            A TaxiServiceTrajectoryDataset created from the given csv.
+        """
+        assert type(path) == str
+        assert path[-4:] == '.csv'
+
+        if isinstance(limit, int):
+            dataloader = pd.read_csv(path, sep=',', encoding='latin1', chunksize=limit)
+            data_frame = next(dataloader)
+            dataloader.close()
+        else:
+            data_frame = pd.read_csv(path, sep=',', encoding='latin1')
+
+        return TaxiServiceTrajectoryDataset(data_frame)
