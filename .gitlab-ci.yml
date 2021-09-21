@@ -1,17 +1,62 @@
-image: python:3.7
+# This ci config file runs in two stages:
+# - First a code analysis is performed with both, flake8
+#   and pylint. This should identify potential bugs and
+#   inefficient code.
+#   flake8: https://pypi.org/project/flake8/
+#   pylint: https://www.pylint.org/
+# - The second stage runs the test suite with Python's
+#   built in unittest library.
+#   unittest: https://docs.python.org/3/library/unittest.html
+#
+# Inspiration came from here:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+image: python:latest
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+    - venv/
 
 before_script:
-  - python --version
+  - python --version # Print Python version for debugging
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install -r requirements.txt
 
 stages:
+  - code analysis
   - test
 
-unit-test-job:
-  stage: test
+flake8:
+  stage: code analysis
+  allow_failure: true
   script:
-    - echo "Running tests.."
+    - pip install flake8
+      # Check for max line length of 120. Use Black with option -l 120 to check this locally.
+    - flake8 --max-line-length=120 */*.py
 
-lint-test-job:
+pylint:
+  stage: code analysis
+  allow_failure: true
+  script:
+    - pip install pylint
+      # Run pylint with line length warnings (C0301) disabled.
+    - pylint -d C0301 */*.py
+
+unittest:
   stage: test
   script:
-    - echo "Running code style checks.."
+    - echo "Running tests"
+    - export PYTHONPATH="$PYTHONPATH:."
+    - python -m unittest discover -v
