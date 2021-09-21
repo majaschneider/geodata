@@ -151,4 +151,37 @@ class De4lSensorDataset(Dataset):
         latitude_max = max(data_frame["location"].apply(lambda x: x["lat"]))
         return longitude_min, longitude_max, latitude_min, latitude_max
 
-# todo: write import methods
+    @classmethod
+    def create_from_json(cls, path, route_len, limit=None):
+        """
+        Initializes a dataset by reading from a json. If limit is given, only the first lines are read. The json file
+        should contain a list of entries so that it is possible to use 'lines' as parameter for read_json().
+        Each entry in the json file should at least have the following key-value-pairs:
+            'timestamp' UTC in format ISO 8601
+            'location' (dict('lon', 'lat'))
+
+        Parameters
+        ----------
+        path : str
+            Relative path to a json file containing data entries required for a De4lSensorDataset.
+        route_len : int
+            Fixed length per route.
+        limit : int
+            Maximum number of lines from the file that should be read. If None, the whole file is read.
+
+        Returns
+        -------
+        De4lSensorDataset
+            A De4lSensorDataset created from the given json.
+        """
+        assert isinstance(path, str)
+        assert path[-5:] == '.json'
+
+        if isinstance(limit, int):
+            dataloader = pd.read_json(path, lines=True, chunksize=limit)
+            data_frame = next(dataloader)
+            dataloader.close()
+        else:
+            data_frame = pd.read_json(path, lines=True)
+
+        return De4lSensorDataset(data_frame, route_len)

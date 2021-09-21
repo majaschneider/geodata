@@ -46,6 +46,23 @@ class TestDe4lSensorDataset(unittest.TestCase):
         location_bounds = De4lSensorDataset.calculate_location_bounds(self.data_frame)
         self.assertEqual((11.61, 11.62, 50.77, 50.87), location_bounds)
 
+    def test_create_from_json(self):
+        path = "tests/resources/test-sensor-dataset.json"
+        route_len = 10
+
+        correct_path_dataset = De4lSensorDataset.create_from_json(path, route_len)
+        self.assertTrue(isinstance(correct_path_dataset, De4lSensorDataset))
+        self.assertEqual(correct_path_dataset.data_frame.loc[0]['value'], 13)
+
+        correct_path_dataset_small = De4lSensorDataset.create_from_json(path, route_len, limit=100)
+        self.assertEqual(correct_path_dataset_small.data_frame.shape[0], 100)
+
+        # test wrong file type by slicing the last character off
+        self.assertRaises(AssertionError, lambda: De4lSensorDataset.create_from_json(path[:-1], route_len))
+
+        # test wrong path by slicing the first character off
+        self.assertRaises(ValueError, lambda: De4lSensorDataset.create_from_json(path[1:], route_len))
+
 
 if __name__ == "__main__":
     unittest.main()
