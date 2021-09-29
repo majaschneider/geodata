@@ -50,12 +50,17 @@ class Point(list):
             - 1 for the y-coordinate respectively latitude
         value : float
             The coordinate value.
+        Returns
+        -------
+        point
+            The modified point instance.
         """
         super().__setitem__(key, value)
         if key == 0:
             self.x_lon = value
         if key == 1:
             self.y_lat = value
+        return self
 
     def set_x_lon(self, value):
         """
@@ -65,8 +70,13 @@ class Point(list):
         ----------
         value : float
             New x-coordinate respectively longitude of this point.
+        
+        Returns
+        -------
+        point
+            The modified point instance.
         """
-        self.__setitem__(0, value)
+        return self.__setitem__(0, value)
 
     def set_y_lat(self, value):
         """
@@ -76,8 +86,13 @@ class Point(list):
         ----------
         value : float
             New y-coordinate respectively latitude of this point.
+        
+        Returns
+        -------
+        point
+            The modified point instance.
         """
-        self.__setitem__(1, value)
+        return self.__setitem__(1, value)
 
     def set_geo_reference_system(self, value):
         """
@@ -89,9 +104,15 @@ class Point(list):
             New geographical reference system of this point:
             - 'latlon': latitude and longitude coordinates on earth
             - 'cartesian': uses Euclidean space
+
+        Returns
+        -------
+        point
+            The modified point instance.
         """
         assert value in ("cartesian", "latlon")
         self.__geo_reference_system = value
+        return self
 
     def add_vector(self, distance, angle):
         """
@@ -104,6 +125,11 @@ class Point(list):
             Vector length in meters.
         angle : float
             Angle of vector in radian.
+
+        Returns
+        -------
+        point
+            The modified point instance.
         """
         if self.__geo_reference_system == "latlon":
             angular_distance = distance / self.__earth_radius
@@ -121,10 +147,16 @@ class Point(list):
             self.set_y_lat(latitude_tmp)
         else:
             raise NotImplementedError("Adding a vector onto a cartesian point is not available.")
+        return self
 
     def to_cartesian(self):
         """
         Transforms coordinates of this point from latitude and longitude (both in radian) into cartesian.
+
+        Returns
+        -------
+        point
+            The modified point instance.
         """
         if self.__geo_reference_system == "latlon":
             r = self.__earth_radius / 1000  # km
@@ -133,10 +165,16 @@ class Point(list):
             self.set_geo_reference_system("cartesian")
         else:
             warnings.warn("geo reference system is already cartesian.")
+        return self
 
     def to_latlon(self):
         """
         Transforms coordinates of this point from cartesian into latitude and longitude (both in radian).
+
+        Returns
+        -------
+        point
+            The modified point instance.
         """
         if self.__geo_reference_system == "cartesian":
             r = self.__earth_radius / 1000  # km
@@ -145,3 +183,4 @@ class Point(list):
             self.set_geo_reference_system("latlon")
         else:
             warnings.warn("geo reference system is already latlon.")
+        return self
