@@ -1,13 +1,23 @@
-"""Provides a route datatype for point lists (geo-coordinates) and their manipulation."""
+"""Provides a route datatype for lists of points (geo-coordinates) and their manipulation.
+"""
 
 import torch
 from geodata.point import Point
 
 
 class Route(list):
-    """A route indicates a sequence of points."""
+    """A route indicating a sequence of points.
+    """
 
     def __init__(self, route=None):
+        """
+        Creates a new Route object.
+
+        Parameters
+        ----------
+        route : list, optional
+            The route, that this route should be initialized with.
+        """
         # initialize with empty list
         super().__init__()
         if route is not None:
@@ -20,6 +30,16 @@ class Route(list):
                     self.__setitem__(idx, Point(point))
 
     def __setitem__(self, key, value):
+        """
+        Sets the value of the point at position key.
+
+        Parameters
+        ----------
+        key : int
+            Position at which value should be set.
+        value : Point
+            The new value.
+        """
         if not isinstance(value, Point):
             value = Point(value)
         super().__setitem__(key, value)
@@ -27,13 +47,24 @@ class Route(list):
     @classmethod
     def from_torch_tensor(cls, tensor):
         """
-        Convert tensor from torch.Tensor to Route.
-        :param tensor: route of type torch.Tensor
-        :return: route of type Route
+        Create a Route object from a route in torch.Tensor format.
+
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            The tensor object which is to be transformed into a Route object.
         """
         return cls(tensor.numpy().tolist())
 
     def append(self, value):
+        """
+        Appends a point to this route.
+
+        Parameters
+        ----------
+        value : list
+            The point that is to be appended to this route.
+        """
         if not isinstance(value, Point):
             value = Point(value)
         super().append(value)
@@ -41,34 +72,41 @@ class Route(list):
     def scale(self, scale_values):
         """
         Scales route coordinates from minimum and maximum values indicated by scale_values parameter to [0,1].
-        :param scale_values: minimum and maximum values to scale route points with, provided in format
-        (x minimum, x maximum, y minimum, y maximum) for coordinates
-        :return: route scaled by scale_values
+
+        Parameters
+        ----------
+        scale_values : tuple
+            Minimum and maximum values to scale route points with, provided in format
+            (x minimum, x maximum, y minimum, y maximum) for coordinates x and y.
         """
         x_min, x_max, y_min, y_max = scale_values
         for point in self:
             point.set_x_lon((point.x_lon - x_min) / (x_max - x_min))
             point.set_y_lat((point.y_lat - y_min) / (y_max - y_min))
-        return self
 
     def inverse_scale(self, scale_values):
         """
         Scales route coordinates from [0,1] to minimum and maximum values indicated by scale_values parameter.
-        :param scale_values: minimum and maximum values to scale route points to, provided in format
-        (x minimum, x maximum, y minimum, y maximum) for coordinates
-        :return: route scaled to scale_values
+
+        Parameters
+        ----------
+        scale_values : tuple
+            Minimum and maximum values to scale route points to, provided in format
+            (x minimum, x maximum, y minimum, y maximum) for coordinates x and y.
         """
         (x_min, x_max, y_min, y_max) = scale_values
         for point in self:
             point.set_x_lon(point.x_lon * (x_max - x_min) + x_min)
             point.set_y_lat(point.y_lat * (y_max - y_min) + y_min)
-        return self
 
     def pad(self, target_len):
         """
         Pads route with zero values to achieve target_len.
-        :param target_len: target length of route
-        :return padded route
+
+        Parameters
+        ----------
+        target_len : int
+            Target length of route.
         """
         route = self
         pad_len = target_len - len(self)
