@@ -18,7 +18,7 @@ class TestPointMethods(unittest.TestCase):
             Point([1])
             Point([1, 2, 3])
             # disallow more than one list item
-            Point([1, 1], [2, 2])
+            Point([[1, 1], [2, 2]])
         self.assertEqual(Point, type(Point([0, 1])))
 
     def test_append(self):
