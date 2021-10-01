@@ -1,7 +1,7 @@
 import unittest
 import math
 
-from geodata.point import Point, get_bearing
+from geodata.point import Point, get_bearing, get_distance
 from helper.helper import get_digits
 
 
@@ -102,6 +102,15 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b))
         # test bearing on Earth
         self.assertAlmostEqual(self.angle, get_bearing(self.start_point, self.end_point), places=3)
+
+    def test_get_distance(self):
+        # test distance in cartesian plane
+        point_a = Point([0, 0], 'cartesian')
+        point_b = Point([1, 1], 'cartesian')
+        # Pythagorean theorem: 1² + 1² = c² -> c = sqrt(c²)
+        self.assertAlmostEqual(math.sqrt(2), get_distance(point_a, point_b))
+        # test distance on Earth
+        self.assertAlmostEqual(self.distance, get_distance(self.start_point, self.end_point), delta=1)
 
 
 if __name__ == "__main__":

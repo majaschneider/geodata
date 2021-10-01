@@ -4,6 +4,7 @@
 import math
 import warnings
 import numpy as np
+import haversine as hs
 
 
 def get_bearing(point_a, point_b):
@@ -30,6 +31,33 @@ def get_bearing(point_a, point_b):
     bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
                          math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
     return bearing
+
+
+def get_distance(point_a, point_b):
+    """
+    Calculates the distance between two points.
+
+    Parameters
+    ----------
+    point_a : Point
+        The start point.
+    point_b : Point
+        The end point.
+
+    Returns
+    -------
+    distance : float
+        The distance between point_a and point_b in meters.
+    """
+    geo_ref_a = point_a._Point__geo_reference_system
+    geo_ref_b = point_b._Point__geo_reference_system
+    assert(geo_ref_a == geo_ref_b)
+    if geo_ref_a == 'latlon':
+        distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
+                                [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
+    else:   # distance in cartesian plane
+        distance = math.sqrt(math.pow(point_b.x_lon - point_a.x_lon, 2) + math.pow(point_b.y_lat - point_a.y_lat, 2))
+    return distance
 
 
 class Point(list):
