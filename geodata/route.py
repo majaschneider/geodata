@@ -3,6 +3,7 @@
 
 import torch
 from geodata.point import Point
+from geodata.pointT import PointT
 
 
 class Route(list):
@@ -130,7 +131,8 @@ class Route(list):
 
     def pad(self, target_len):
         """
-        Pads route with zero values to achieve target_len.
+        Pads route with zero values to achieve target_len. Padding only applies to routes with items of type Point, but
+        not of type being a subclass of Point.
 
         Parameters
         ----------
@@ -142,6 +144,10 @@ class Route(list):
         Route
             A copy of this route, padded by zero values to target_length.
         """
+        if len(self) > 0:
+            if not type(self[0]) is Point:
+                raise Exception("pad only applies to routes with items of type Point. No subclasses of pad are allowed."
+                                )
         route = self
         pad_len = target_len - len(self)
         if pad_len > 0:
