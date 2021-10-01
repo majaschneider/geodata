@@ -1,10 +1,24 @@
 import unittest
 import math
-from geodata.point import Point
+
+from geodata.point import Point, get_bearing
 from helper.helper import get_digits
 
 
 class TestPointMethods(unittest.TestCase):
+    def setUp(self):
+        # See example here: http://www.movable-type.co.uk/scripts/latlong.html
+        # Values vary slightly due to the use of different earth_radius values
+        # https://geodesyapps.ga.gov.au/vincenty-direct
+        lat_start = math.radians(53.320556)  # 53°19′14″N
+        lon_start = math.radians(-1.729722)  # 001°43′47″W
+        lat_end = math.radians(53.188432)  # 53°11′18″N
+        lon_end = math.radians(0.133333)    # 000°08'00"E
+        self.start_point = Point([lon_start, lat_start])
+        self.end_point = Point([lon_end, lat_end])
+        self.angle = math.radians(96.021667)  # 096°01′18″
+        self.distance = 124_801  # meters
+
     def test_constructor(self):
         with self.assertRaises(TypeError):
             # disallow empty points
@@ -53,20 +67,10 @@ class TestPointMethods(unittest.TestCase):
             self.fail("Unexpected exception when invoking set_geo_reference_system().")
 
     def test_add_vector(self):
-        # See example here: http://www.movable-type.co.uk/scripts/latlong.html
-        # https://geodesyapps.ga.gov.au/vincenty-direct
-        lat_start = math.radians(53.320556)  # 53°19′14″N
-        lon_start = math.radians(-1.729722)  # 001°43′47″W
-        angle = math.radians(96.021667)  # 096°01′18″
-        distance = 124_800  # meters
-        lat_target = math.radians(53.188432)  # 53°11′18″N
-        lon_target = math.radians(0.127222)  # 000°07′38″E
-        p = Point([lon_start, lat_start])
-
-        p.add_vector(distance, angle)
+        self.start_point.add_vector(self.distance, self.angle)
         accuracy = 4
-        self.assertEqual(get_digits(lon_target, accuracy), get_digits(p.x_lon, accuracy))
-        self.assertEqual(get_digits(lat_target, accuracy), get_digits(p.y_lat, accuracy))
+        self.assertEqual(get_digits(self.start_point.x_lon, accuracy), get_digits(self.end_point.x_lon, accuracy))
+        self.assertEqual(get_digits(self.start_point.y_lat, accuracy), get_digits(self.end_point.y_lat, accuracy))
 
     def test_conversion_georeference_systems(self):
         lat_start = math.radians(53)
@@ -88,6 +92,16 @@ class TestPointMethods(unittest.TestCase):
         p.to_cartesian()
         self.assertEqual(get_digits(lon_start, accuracy), get_digits(p.x_lon, accuracy))
         self.assertEqual(get_digits(y_new, accuracy), get_digits(p.y_lat, accuracy))
+
+    def test_get_bearing(self):
+        # test bearing in cartesian plane
+        point_a = Point([0, 0], 'cartesian').to_latlon()
+        point_b = Point([1, 1], 'cartesian').to_latlon()
+        # expected angle between point A and B is 45 degrees
+        expected_bearing = math.radians(45)
+        self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b))
+        # test bearing on Earth
+        self.assertAlmostEqual(self.angle, get_bearing(self.start_point, self.end_point), places=3)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,32 @@ import warnings
 import numpy as np
 
 
+def get_bearing(point_a, point_b):
+    """
+    Calculates the initial bearing between a start point A and an endpoint B. For details see 'Bearing' at
+    http://www.movable-type.co.uk/scripts/latlong.html.
+
+    Parameters
+    ----------
+    point_a : Point
+        The start point in 'latlon' format.
+    point_b : Point
+        The endpoint in 'latlon' format.
+    Returns
+    -------
+    bearing : float
+        The initial bearing in radian, which followed in a straight line along a great-circle arc, starting at the
+        start point will arrive at the end point.
+    """
+    assert(point_a.get_geo_reference_system() == 'latlon')
+    assert(point_b.get_geo_reference_system() == 'latlon')
+    lon1, lat1 = point_a
+    lon2, lat2 = point_b
+    bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
+                         math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
+    return bearing
+
+
 class Point(list):
     """A point specifying a geographical location.
     """
@@ -27,7 +53,7 @@ class Point(list):
         super().__init__(coordinates)
         self.__geo_reference_system = None
         self.set_geo_reference_system(geo_reference_system)
-        self.__earth_radius = 6_378_137
+        self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
         assert isinstance(coordinates, list)
