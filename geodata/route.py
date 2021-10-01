@@ -7,8 +7,19 @@ from geodata.pointT import PointT
 
 
 class Route(list):
-    """A route indicating a sequence of points.
+    """A route indicating a sequence of points. If timestamps are given for each point, the route is sorted by time.
     """
+
+    def has_timestamps(self):
+        """
+        Returns True, if the route points have a timestamp.
+
+        Returns
+        -------
+        bool
+            True, if route is not empty and points have timestamps, else False.
+        """
+        return len(self) > 0 and type(self[0]) is PointT
 
     def __init__(self, route=None):
         """
@@ -29,6 +40,8 @@ class Route(list):
             for idx, point in enumerate(route):
                 if not isinstance(point, Point):
                     self.__setitem__(idx, Point(point))
+            if self.has_timestamps():
+                self.sort_by_time()
 
     def __setitem__(self, key, value):
         """
@@ -49,6 +62,8 @@ class Route(list):
         if not isinstance(value, Point):
             value = Point(value)
         super().__setitem__(key, value)
+        if self.has_timestamps():
+            self.sort_by_time()
         return self
 
     @classmethod
@@ -85,6 +100,8 @@ class Route(list):
         if not isinstance(value, Point):
             value = Point(value)
         super().append(value)
+        if self.has_timestamps():
+            self.sort_by_time()
         return self
 
     def scale(self, scale_values):
