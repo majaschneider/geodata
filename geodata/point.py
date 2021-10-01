@@ -60,6 +60,35 @@ def get_distance(point_a, point_b):
     return distance
 
 
+def get_interpolated_point(start_point, end_point, ratio):
+    """
+    Interpolates a point on the straight line between start point and end point, where the distance from the start
+    point to the interpolated point corresponds to the provided ratio of the distance from the start point to the end
+    point.
+
+    Parameters
+    ----------
+    start_point : Point
+        The start point of the line.
+    end_point : Point
+        The end point of the line.
+    ratio : float
+        The ratio of distance between start and interpolated to start and end point.
+
+    Returns
+    -------
+    interpolated_point : Point
+        The interpolated point.
+    """
+    geo_ref = start_point.get_geo_reference_system()
+    if geo_ref == 'latlon':
+        interpolated_point = Point(start_point, geo_reference_system=geo_ref)
+        interpolated_point.add_vector(ratio * get_distance(start_point, end_point), get_bearing(start_point, end_point))
+    else:
+        raise NotImplementedError("Interpolating in the cartesian plane is not available.")
+    return interpolated_point
+
+
 class Point(list):
     """A point specifying a geographical location.
     """

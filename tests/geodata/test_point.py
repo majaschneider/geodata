@@ -1,7 +1,7 @@
 import unittest
 import math
 
-from geodata.point import Point, get_bearing, get_distance
+from geodata.point import Point, get_bearing, get_distance, get_interpolated_point
 from helper.helper import get_digits
 
 
@@ -111,6 +111,13 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(math.sqrt(2), get_distance(point_a, point_b))
         # test distance on Earth
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, self.end_point), delta=1)
+
+    def test_get_interpolated_point(self):
+        ratio = 0.5
+        # test interpolation on Earth
+        interpolated_point = get_interpolated_point(self.start_point, self.end_point, ratio)
+        self.assertAlmostEqual(get_bearing(self.start_point, self.end_point),
+                               get_bearing(self.start_point, interpolated_point))
 
 
 if __name__ == "__main__":
