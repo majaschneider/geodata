@@ -49,8 +49,8 @@ def get_distance(point_a, point_b):
     distance : float
         The distance between point_a and point_b in meters.
     """
-    geo_ref_a = point_a._Point__geo_reference_system
-    geo_ref_b = point_b._Point__geo_reference_system
+    geo_ref_a = point_a.get_geo_reference_system()
+    geo_ref_b = point_b.get_geo_reference_system()
     assert(geo_ref_a == geo_ref_b)
     if geo_ref_a == 'latlon':
         distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
@@ -168,6 +168,17 @@ class Point(list):
         self.__geo_reference_system = value
         return self
 
+    def get_geo_reference_system(self):
+        """
+        Returns the geographical reference system of this point.
+
+        Returns
+        -------
+        __geo_reference_system : {'latlon', 'cartesian'}
+            The geographical reference system of this point.
+        """
+        return self.__geo_reference_system
+
     def add_vector(self, distance, angle):
         """
         Adds a vector to a point. The vector is defined by its length and angle. For details see 'Destination point
@@ -185,7 +196,7 @@ class Point(list):
         point : Point
             The modified point instance.
         """
-        if self.__geo_reference_system == "latlon":
+        if self.get_geo_reference_system() == "latlon":
             angular_distance = distance / self.__earth_radius
             latitude_tmp = math.asin(
                 math.sin(self.y_lat) * math.cos(angular_distance)
@@ -212,7 +223,7 @@ class Point(list):
         point
             The modified point instance.
         """
-        if self.__geo_reference_system == "latlon":
+        if self.get_geo_reference_system() == "latlon":
             r = self.__earth_radius / 1000  # km
             self.set_x_lon(r * self.x_lon)
             self.set_y_lat(r * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
@@ -230,7 +241,7 @@ class Point(list):
         point
             The modified point instance.
         """
-        if self.__geo_reference_system == "cartesian":
+        if self.get_geo_reference_system() == "cartesian":
             r = self.__earth_radius / 1000  # km
             self.set_x_lon(self.x_lon / r)
             self.set_y_lat(np.pi / 2 - 2 * np.arctan(np.exp(-self.y_lat / r)))

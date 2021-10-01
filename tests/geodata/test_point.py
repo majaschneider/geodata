@@ -60,9 +60,9 @@ class TestPointMethods(unittest.TestCase):
             p.set_geo_reference_system("invalid_value")
         try:
             p.set_geo_reference_system("cartesian")
-            self.assertEqual("cartesian", p._Point__geo_reference_system)
+            self.assertEqual("cartesian", p.get_geo_reference_system())
             p.set_geo_reference_system("latlon")
-            self.assertEqual("latlon", p._Point__geo_reference_system)
+            self.assertEqual("latlon", p.get_geo_reference_system())
         except Exception:
             self.fail("Unexpected exception when invoking set_geo_reference_system().")
 
