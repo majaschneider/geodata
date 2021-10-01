@@ -1,7 +1,9 @@
+import random
 import unittest
 import torch
 from geodata.route import Route
 from geodata.point import Point
+from geodata.pointT import PointT
 
 
 class TestPointMethods(unittest.TestCase):
@@ -64,6 +66,14 @@ class TestPointMethods(unittest.TestCase):
             self.assertEqual(Point, type(p))
             self.assertEqual(0, p.x_lon)
             self.assertEqual(0, p.y_lat)
+
+    def test_sort_by_time(self):
+        r = Route()
+        for i in range(100):
+            r.append(PointT([1, 1], timestamp=random.randint(0, 1_000)))
+        r.sort_by_time()
+        timestamps = [p.timestamp for p in r]
+        self.assertTrue(timestamps == sorted(timestamps))
 
 
 if __name__ == "__main__":

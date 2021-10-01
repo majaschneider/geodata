@@ -156,3 +156,19 @@ class Route(list):
             tensor = pad(tensor)
             route = self.__init__(tensor.numpy().tolist())
         return route
+
+    def sort_by_time(self):
+        """
+        Sorts the items of this route by timestamp. This method only applies to routes with items of type PointT.
+
+        Returns
+        -------
+        Route
+            This route sorted by the timestamp of its items.
+
+        """
+        if len(self) > 0:
+            if not type(self[0]) is PointT:
+                raise Exception("sort_by_time only applies to routes with items of type PointT.")
+        self.sort(key=lambda item: item.timestamp)
+        return self
