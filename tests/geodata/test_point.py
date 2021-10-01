@@ -72,7 +72,7 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(get_digits(self.start_point.x_lon, accuracy), get_digits(self.end_point.x_lon, accuracy))
         self.assertEqual(get_digits(self.start_point.y_lat, accuracy), get_digits(self.end_point.y_lat, accuracy))
 
-    def test_conversion_georeference_systems(self):
+    def test_conversion_geo_reference_systems(self):
         lat_start = math.radians(53)
         lon_start = math.radians(21)
         p = Point([lon_start, lat_start])

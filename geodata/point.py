@@ -182,7 +182,7 @@ class Point(list):
 
         Returns
         -------
-        point
+        point : Point
             The modified point instance.
         """
         if self.__geo_reference_system == "latlon":
