@@ -1,7 +1,7 @@
 import unittest
 import torch
 import pandas as pd
-from datasets.taxi import TaxiServiceTrajectoryDataset
+from geodatasets.taxi import TaxiServiceTrajectoryDataset
 from geodata.route import Route
 
 

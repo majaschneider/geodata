@@ -4,7 +4,7 @@ import unittest
 import dateutil.parser
 import torch
 import pandas as pd
-from datasets.de4l import De4lSensorDataset
+from geodatasets.de4l import De4lSensorDataset
 from geodata.route import Route
 
 
