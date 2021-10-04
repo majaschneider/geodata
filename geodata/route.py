@@ -3,11 +3,23 @@
 
 import torch
 from geodata.point import Point
+from geodata.pointT import PointT
 
 
 class Route(list):
-    """A route indicating a sequence of points.
+    """A route indicating a sequence of points. If timestamps are given for each point, the route is sorted by time.
     """
+
+    def has_timestamps(self):
+        """
+        Returns True, if the route points have a timestamp.
+
+        Returns
+        -------
+        bool
+            True, if route is not empty and points have timestamps, else False.
+        """
+        return len(self) > 0 and type(self[0]) is PointT
 
     def __init__(self, route=None):
         """
@@ -28,6 +40,8 @@ class Route(list):
             for idx, point in enumerate(route):
                 if not isinstance(point, Point):
                     self.__setitem__(idx, Point(point))
+            if self.has_timestamps():
+                self.sort_by_time()
 
     def __setitem__(self, key, value):
         """
@@ -48,6 +62,8 @@ class Route(list):
         if not isinstance(value, Point):
             value = Point(value)
         super().__setitem__(key, value)
+        if self.has_timestamps():
+            self.sort_by_time()
         return self
 
     @classmethod
@@ -84,6 +100,8 @@ class Route(list):
         if not isinstance(value, Point):
             value = Point(value)
         super().append(value)
+        if self.has_timestamps():
+            self.sort_by_time()
         return self
 
     def scale(self, scale_values):
@@ -130,7 +148,8 @@ class Route(list):
 
     def pad(self, target_len):
         """
-        Pads route with zero values to achieve target_len.
+        Pads route with zero values to achieve target_len. Padding only applies to routes with items of type Point, but
+        not of type being a subclass of Point.
 
         Parameters
         ----------
@@ -142,6 +161,10 @@ class Route(list):
         Route
             A copy of this route, padded by zero values to target_length.
         """
+        if len(self) > 0:
+            if not type(self[0]) is Point:
+                raise Exception("pad only applies to routes with items of type Point. No subclasses of pad are allowed."
+                                )
         route = self
         pad_len = target_len - len(self)
         if pad_len > 0:
@@ -150,3 +173,19 @@ class Route(list):
             tensor = pad(tensor)
             route = self.__init__(tensor.numpy().tolist())
         return route
+
+    def sort_by_time(self):
+        """
+        Sorts the items of this route by timestamp. This method only applies to routes with items of type PointT.
+
+        Returns
+        -------
+        Route
+            This route sorted by the timestamp of its items.
+
+        """
+        if len(self) > 0:
+            if not type(self[0]) is PointT:
+                raise Exception("sort_by_time only applies to routes with items of type PointT.")
+        self.sort(key=lambda item: item.timestamp)
+        return self

@@ -1,7 +1,33 @@
 """Provides a point datatype for geo-coordinates and timestamps and their manipulation.
 """
 
-from geodata.point import Point
+from geodata.point import Point, get_interpolated_point as get_interpolated
+
+
+def get_interpolated_point(start_point, end_point, ratio):
+    """
+    Interpolates a point on the straight line between start point and end point, where the distance from the start
+    point to the interpolated point corresponds to the provided ratio of the distance from the start point to the end
+    point. The timestamp of the interpolated point is set to the start_point's timestamp.
+
+    Parameters
+    ----------
+    start_point : PointT
+        The start point of the line.
+    end_point : PointT
+        The end point of the line.
+    ratio : float
+        The ratio of distance between start and interpolated to start and end point.
+
+    Returns
+    -------
+    interpolated_point : PointT
+        The interpolated point.
+    """
+    point = get_interpolated(start_point, end_point, ratio)
+    interpolated_point_t = PointT(point, timestamp=start_point.timestamp,
+                                  geo_reference_system=point.get_geo_reference_system())
+    return interpolated_point_t
 
 
 class PointT(Point):

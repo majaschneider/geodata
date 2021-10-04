@@ -4,6 +4,89 @@
 import math
 import warnings
 import numpy as np
+import haversine as hs
+
+
+def get_bearing(point_a, point_b):
+    """
+    Calculates the initial bearing between a start point A and an endpoint B. For details see 'Bearing' at
+    http://www.movable-type.co.uk/scripts/latlong.html.
+
+    Parameters
+    ----------
+    point_a : Point
+        The start point in 'latlon' format.
+    point_b : Point
+        The endpoint in 'latlon' format.
+    Returns
+    -------
+    bearing : float
+        The initial bearing in radian, which followed in a straight line along a great-circle arc, starting at the
+        start point will arrive at the end point.
+    """
+    assert(point_a.get_geo_reference_system() == 'latlon')
+    assert(point_b.get_geo_reference_system() == 'latlon')
+    lon1, lat1 = point_a
+    lon2, lat2 = point_b
+    bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
+                         math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
+    return bearing
+
+
+def get_distance(point_a, point_b):
+    """
+    Calculates the distance between two points.
+
+    Parameters
+    ----------
+    point_a : Point
+        The start point.
+    point_b : Point
+        The end point.
+
+    Returns
+    -------
+    distance : float
+        The distance between point_a and point_b in meters.
+    """
+    geo_ref_a = point_a.get_geo_reference_system()
+    geo_ref_b = point_b.get_geo_reference_system()
+    assert(geo_ref_a == geo_ref_b)
+    if geo_ref_a == 'latlon':
+        distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
+                                [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
+    else:   # distance in cartesian plane
+        distance = math.sqrt(math.pow(point_b.x_lon - point_a.x_lon, 2) + math.pow(point_b.y_lat - point_a.y_lat, 2))
+    return distance
+
+
+def get_interpolated_point(start_point, end_point, ratio):
+    """
+    Interpolates a point on the straight line between start point and end point, where the distance from the start
+    point to the interpolated point corresponds to the provided ratio of the distance from the start point to the end
+    point.
+
+    Parameters
+    ----------
+    start_point : Point
+        The start point of the line.
+    end_point : Point
+        The end point of the line.
+    ratio : float
+        The ratio of distance between start and interpolated to start and end point.
+
+    Returns
+    -------
+    interpolated_point : Point
+        The interpolated point.
+    """
+    geo_ref = start_point.get_geo_reference_system()
+    if geo_ref == 'latlon':
+        interpolated_point = Point(start_point, geo_reference_system=geo_ref)
+        interpolated_point.add_vector(ratio * get_distance(start_point, end_point), get_bearing(start_point, end_point))
+    else:
+        raise NotImplementedError("Interpolating in the cartesian plane is not available.")
+    return interpolated_point
 
 
 class Point(list):
@@ -27,7 +110,7 @@ class Point(list):
         super().__init__(coordinates)
         self.__geo_reference_system = None
         self.set_geo_reference_system(geo_reference_system)
-        self.__earth_radius = 6_378_137
+        self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
         assert isinstance(coordinates, list)
@@ -114,6 +197,17 @@ class Point(list):
         self.__geo_reference_system = value
         return self
 
+    def get_geo_reference_system(self):
+        """
+        Returns the geographical reference system of this point.
+
+        Returns
+        -------
+        __geo_reference_system : {'latlon', 'cartesian'}
+            The geographical reference system of this point.
+        """
+        return self.__geo_reference_system
+
     def add_vector(self, distance, angle):
         """
         Adds a vector to a point. The vector is defined by its length and angle. For details see 'Destination point
@@ -128,10 +222,10 @@ class Point(list):
 
         Returns
         -------
-        point
+        point : Point
             The modified point instance.
         """
-        if self.__geo_reference_system == "latlon":
+        if self.get_geo_reference_system() == "latlon":
             angular_distance = distance / self.__earth_radius
             latitude_tmp = math.asin(
                 math.sin(self.y_lat) * math.cos(angular_distance)
@@ -158,7 +252,7 @@ class Point(list):
         point
             The modified point instance.
         """
-        if self.__geo_reference_system == "latlon":
+        if self.get_geo_reference_system() == "latlon":
             r = self.__earth_radius / 1000  # km
             self.set_x_lon(r * self.x_lon)
             self.set_y_lat(r * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
@@ -176,7 +270,7 @@ class Point(list):
         point
             The modified point instance.
         """
-        if self.__geo_reference_system == "cartesian":
+        if self.get_geo_reference_system() == "cartesian":
             r = self.__earth_radius / 1000  # km
             self.set_x_lon(self.x_lon / r)
             self.set_y_lat(np.pi / 2 - 2 * np.arctan(np.exp(-self.y_lat / r)))
