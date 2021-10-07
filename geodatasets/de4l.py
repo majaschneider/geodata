@@ -101,8 +101,8 @@ class De4lSensorDataset(Dataset):
             "quarter_hour_of_day": quarter_hour_of_day_one_hot,
             "month": month_one_hot,
             # if any other route format is required, it can be added here
-            "route": route_tensor_raw_padded,
-            "route_scaled_padded": route_tensor_scaled_padded,
+            "route_tensor_raw_padded": route_tensor_raw_padded,
+            "route_tensor_scaled_padded": route_tensor_scaled_padded,
         }
 
         return sample

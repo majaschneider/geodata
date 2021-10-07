@@ -24,7 +24,7 @@ class TestDe4lSensorDataset(unittest.TestCase):
         route_len = 60
         self.setup_dataloader(file_path="tests/resources/test-sensor-dataset.json", route_len=route_len)
         for batch in self.dataloader:
-            for route_tensor in batch["route_scaled_padded"]:
+            for route_tensor in batch["route_tensor_scaled_padded"]:
                 # routes have same length
                 self.assertEqual(len(route_tensor), route_len)
                 # routes are scaled to [0, 1]
