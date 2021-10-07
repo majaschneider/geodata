@@ -1,3 +1,6 @@
+"""Provides a class for reading and preprocessing data from project DE4L.
+"""
+
 import datetime
 from math import radians
 
@@ -44,7 +47,7 @@ class De4lSensorDataset(Dataset):
         else:
             self.location_bounds = location_bounds
 
-        data_frame["timestamp"] = data_frame["timestamp"].apply(lambda x: self.parse_date(x))
+        data_frame["timestamp"] = data_frame["timestamp"].apply(self.parse_date)
 
         # day of the week from 0 to 6
         data_frame["day_of_week"] = data_frame["timestamp"].apply(lambda x: x.isoweekday() - 1)
@@ -125,11 +128,11 @@ class De4lSensorDataset(Dataset):
         try:
             parsed_date = dateutil.parser.parse(date)
             return parsed_date
-        except TypeError:
+        except TypeError as error:
             if isinstance(date, datetime.datetime):
                 return date
             else:
-                raise(TypeError("A timestamp could not be parsed. Please check for correct format."))
+                raise TypeError("A timestamp could not be parsed. Please check for correct format.") from error
 
     @classmethod
     def calculate_location_bounds(cls, data_frame):

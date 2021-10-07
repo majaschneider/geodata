@@ -3,7 +3,7 @@ import unittest
 import torch
 from geodata.route import Route
 from geodata.point import Point
-from geodata.pointT import PointT
+from geodata.point_t import PointT
 
 
 class TestPointMethods(unittest.TestCase):

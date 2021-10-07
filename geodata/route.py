@@ -3,7 +3,7 @@
 
 import torch
 from geodata.point import Point
-from geodata.pointT import PointT
+from geodata.point_t import PointT
 
 
 class Route(list):
@@ -165,14 +165,13 @@ class Route(list):
             if not type(self[0]) is Point:
                 raise Exception("pad only applies to routes with items of type Point. No subclasses of pad are allowed."
                                 )
-        route = self
         pad_len = target_len - len(self)
         if pad_len > 0:
             tensor = torch.tensor(self)
             pad = torch.nn.ZeroPad2d((0, 0, 0, pad_len))
             tensor = pad(tensor)
-            route = self.__init__(tensor.numpy().tolist())
-        return route
+            self.__init__(tensor.numpy().tolist())
+        return self
 
     def sort_by_time(self):
         """
