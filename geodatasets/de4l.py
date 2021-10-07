@@ -10,6 +10,9 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torch.nn.functional import one_hot
+
+from geodata.point_t import PointT
+from geodata.point import Point
 from geodata.route import Route
 
 
@@ -75,8 +78,8 @@ class De4lSensorDataset(Dataset):
         Returns
         -------
         sample : dict
-            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route_tensor_raw_padded' and
-            'route_tensor_scaled_padded'.
+            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route_with_timestamps',
+            'route_tensor_raw_padded' and 'route_tensor_scaled_padded'.
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
@@ -93,9 +96,14 @@ class De4lSensorDataset(Dataset):
 
         route_idx = 0
         route = Route()
+        route_with_timestamps = Route()
         for i in range(start_idx, min(start_idx + self.route_len, len(self.data_frame))):
             location = self.data_frame.loc[i, "location"]
-            route.append(list([radians(location["lon"]), radians(location["lat"])]))
+            timestamp = self.data_frame.loc[i, "timestamp"]
+            point = Point([radians(location["lon"]), radians(location["lat"])])
+            route.append(point)
+            point_with_timestamp = PointT(point, timestamp=timestamp)
+            route_with_timestamps.append(point_with_timestamp)
 
             # one hot encoding
             day_of_week_one_hot[route_idx] = one_hot(torch.tensor(self.data_frame.loc[i, "day_of_week"]), num_classes=7)
@@ -110,15 +118,17 @@ class De4lSensorDataset(Dataset):
         route_raw_padded.pad(self.route_len)
         route_tensor_raw_padded = torch.tensor(route_raw_padded, dtype=torch.float64, requires_grad=True)
 
-        route.scale(self.location_bounds)
-        route.pad(self.route_len)
-        route_tensor_scaled_padded = torch.tensor(route, dtype=torch.float64, requires_grad=True)
+        route_scaled_padded = Route(route)
+        route_scaled_padded.scale(self.location_bounds)
+        route_scaled_padded.pad(self.route_len)
+        route_tensor_scaled_padded = torch.tensor(route_scaled_padded, dtype=torch.float64, requires_grad=True)
 
         sample = {
             "day_of_week": day_of_week_one_hot,
             "quarter_hour_of_day": quarter_hour_of_day_one_hot,
             "month": month_one_hot,
             # if any other route format is required, it can be added here
+            "route_with_timestamps": route_with_timestamps,
             "route_tensor_raw_padded": route_tensor_raw_padded,
             "route_tensor_scaled_padded": route_tensor_scaled_padded,
         }
