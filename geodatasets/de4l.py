@@ -63,6 +63,21 @@ class De4lSensorDataset(Dataset):
         return int(np.ceil(len(self.data_frame) / self.route_len))
 
     def __getitem__(self, idx):
+        """
+        Provides a data sample containing one hot encoded time features and routes with timestamps as well as scaled and
+        padded routes.
+
+        Parameters
+        ----------
+        idx : int
+            The index of a route.
+
+        Returns
+        -------
+        sample : dict
+            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route_tensor_raw_padded' and
+            'route_tensor_scaled_padded'.
+        """
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
