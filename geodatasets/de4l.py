@@ -1,4 +1,5 @@
 import datetime
+from math import radians
 
 import dateutil.parser
 import numpy as np
@@ -76,7 +77,7 @@ class De4lSensorDataset(Dataset):
         route = Route()
         for i in range(start_idx, min(start_idx + self.route_len, len(self.data_frame))):
             location = self.data_frame.loc[i, "location"]
-            route.append(list([location["lon"], location["lat"]]))
+            route.append(list([radians(location["lon"]), radians(location["lat"])]))
 
             # one hot encoding
             day_of_week_one_hot[route_idx] = one_hot(torch.tensor(self.data_frame.loc[i, "day_of_week"]), num_classes=7)
@@ -145,10 +146,10 @@ class De4lSensorDataset(Dataset):
         longitude_min, longitude_max, latitude_min, latitude_max : float
             The minimum and maximum location coordinates of all route points.
         """
-        longitude_min = min(data_frame["location"].apply(lambda x: x["lon"]))
-        longitude_max = max(data_frame["location"].apply(lambda x: x["lon"]))
-        latitude_min = min(data_frame["location"].apply(lambda x: x["lat"]))
-        latitude_max = max(data_frame["location"].apply(lambda x: x["lat"]))
+        longitude_min = min(data_frame["location"].apply(lambda x: radians(x["lon"])))
+        longitude_max = max(data_frame["location"].apply(lambda x: radians(x["lon"])))
+        latitude_min = min(data_frame["location"].apply(lambda x: radians(x["lat"])))
+        latitude_max = max(data_frame["location"].apply(lambda x: radians(x["lat"])))
         return longitude_min, longitude_max, latitude_min, latitude_max
 
     @classmethod

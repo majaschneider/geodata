@@ -1,5 +1,6 @@
 import datetime
 import unittest
+import math
 
 import dateutil.parser
 import torch
@@ -44,7 +45,7 @@ class TestDe4lSensorDataset(unittest.TestCase):
     def test_calculate_location_bounds(self):
         self.setup_dataloader(file_path="tests/resources/test-sensor-dataset-small.json", route_len=1)
         location_bounds = De4lSensorDataset.calculate_location_bounds(self.data_frame)
-        self.assertEqual((11.61, 11.62, 50.77, 50.87), location_bounds)
+        self.assertEqual((math.radians(11.61), math.radians(11.62), math.radians(50.77), math.radians(50.87)), location_bounds)
 
     def test_create_from_json(self):
         path = "tests/resources/test-sensor-dataset.json"
