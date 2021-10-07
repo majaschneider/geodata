@@ -31,7 +31,7 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(Point, type(r[0]))
 
     def test_from_torch_tensor(self):
-        tensor = torch.tensor([[0, 0], [1, 1]])
+        tensor = torch.tensor([[0., 0.], [1., 1.]], requires_grad=True)
         r = Route([[0, 0], [1, 1]])
         r_from_tensor = Route.from_torch_tensor(tensor)
         self.assertEqual(r, r_from_tensor)

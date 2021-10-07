@@ -81,7 +81,7 @@ class Route(list):
         Route
             The tensor object transformed into a Route object.
         """
-        return cls(tensor.numpy().tolist())
+        return cls(tensor.detach().numpy().tolist())
 
     def append(self, value):
         """
