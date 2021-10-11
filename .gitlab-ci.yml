@@ -29,6 +29,8 @@ cache:
 
 before_script:
   - python --version # Print Python version for debugging
+  - pip install --upgrade pip
+  - pip --version # Print pip version for debugging
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
