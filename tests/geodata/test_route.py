@@ -31,19 +31,19 @@ class TestPointMethods(unittest.TestCase):
 
     def test_set_item(self):
         # assures that list items are points
-        r = Route([[0, 0]])
-        self.assertEqual(Point, type(r[0]))
+        route = Route([[0, 0]])
+        self.assertEqual(Point, type(route[0]))
 
     def test_from_torch_tensor(self):
         tensor = torch.tensor([[0., 0.], [1., 1.]], requires_grad=True)
-        r = Route([[0, 0], [1, 1]])
-        r_from_tensor = Route.from_torch_tensor(tensor)
-        self.assertEqual(r, r_from_tensor)
+        route = Route([[0, 0], [1, 1]])
+        route_from_tensor = Route.from_torch_tensor(tensor)
+        self.assertEqual(route, route_from_tensor)
 
     def test_append(self):
-        r = Route()
-        r.append([0, 0])
-        self.assertEqual(Route([[0, 0]]), r)
+        route = Route()
+        route.append([0, 0])
+        self.assertEqual(Route([[0, 0]]), route)
 
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)
@@ -54,11 +54,11 @@ class TestPointMethods(unittest.TestCase):
 
     def test_inverse_scale(self):
         scale_values = (-1, 1, -1, 1)
-        r = Route([[-1, 1]])
-        r.scale(scale_values)
-        r.inverse_scale(scale_values)
-        self.assertEqual(-1, r[0].x_lon)
-        self.assertEqual(1, r[0].y_lat)
+        route = Route([[-1, 1]])
+        route.scale(scale_values)
+        route.inverse_scale(scale_values)
+        self.assertEqual(-1, route[0].x_lon)
+        self.assertEqual(1, route[0].y_lat)
 
     def test_pad(self):
         # method only applicable for routes containing items of type Point, but no subclasses of Point
@@ -69,15 +69,15 @@ class TestPointMethods(unittest.TestCase):
         except Exception:
             self.fail("Unexpected exception when invoking pad().")
 
-        r = Route([[1, 1]])
-        original_len = len(r)
+        route = Route([[1, 1]])
+        original_len = len(route)
         target_len = 3
-        r.pad(target_len)
-        self.assertEqual(target_len, len(r))
-        for p in r[original_len:]:
-            self.assertEqual(Point, type(p))
-            self.assertEqual(0, p.x_lon)
-            self.assertEqual(0, p.y_lat)
+        route.pad(target_len)
+        self.assertEqual(target_len, len(route))
+        for point in route[original_len:]:
+            self.assertEqual(Point, type(point))
+            self.assertEqual(0, point.x_lon)
+            self.assertEqual(0, point.y_lat)
 
     def test_sort_by_time(self):
         # method only applicable for routes containing items of type PointT, but not Point
@@ -88,11 +88,11 @@ class TestPointMethods(unittest.TestCase):
         except Exception:
             self.fail("Unexpected exception when invoking sort_by_time().")
 
-        r = Route()
+        route = Route()
         for i in range(100):
-            r.append(PointT([1, 1], timestamp=random.randint(0, 1_000)))
-        r.sort_by_time()
-        timestamps = [p.timestamp for p in r]
+            route.append(PointT([1, 1], timestamp=random.randint(0, 1_000)))
+        route.sort_by_time()
+        timestamps = [p.timestamp for p in route]
         self.assertTrue(timestamps == sorted(timestamps))
 
     def test_has_timestamps(self):
