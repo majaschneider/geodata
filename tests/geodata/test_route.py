@@ -7,6 +7,10 @@ from geodata.point_t import PointT
 
 
 class TestPointMethods(unittest.TestCase):
+    def setUp(self) -> None:
+        self.route_without_timestamps = Route([Point([0, 0])])
+        self.route_with_timestamps = Route([PointT([0, 0], timestamp=0)])
+
     def test_constructor(self):
         # initializes with empty list
         self.assertEqual(Route([]), Route())
@@ -57,6 +61,14 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(1, r[0].y_lat)
 
     def test_pad(self):
+        # method only applicable for routes containing items of type Point, but no subclasses of Point
+        with self.assertRaises(Exception):
+            self.route_with_timestamps.pad(5)
+        try:
+            self.route_without_timestamps.pad(5)
+        except Exception:
+            self.fail("Unexpected exception when invoking pad().")
+
         r = Route([[1, 1]])
         original_len = len(r)
         target_len = 3
@@ -68,6 +80,14 @@ class TestPointMethods(unittest.TestCase):
             self.assertEqual(0, p.y_lat)
 
     def test_sort_by_time(self):
+        # method only applicable for routes containing items of type PointT, but not Point
+        with self.assertRaises(Exception):
+            self.route_without_timestamps.sort_by_time()
+        try:
+            self.route_with_timestamps.sort_by_time()
+        except Exception:
+            self.fail("Unexpected exception when invoking sort_by_time().")
+
         r = Route()
         for i in range(100):
             r.append(PointT([1, 1], timestamp=random.randint(0, 1_000)))
@@ -76,10 +96,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertTrue(timestamps == sorted(timestamps))
 
     def test_has_timestamps(self):
-        route_without_timestamps = Route([Point([0, 0])])
-        self.assertFalse(route_without_timestamps.has_timestamps())
-        route_with_timestamps = Route([PointT([0, 0], timestamp=0)])
-        self.assertTrue(route_with_timestamps.has_timestamps())
+        self.assertFalse(self.route_without_timestamps.has_timestamps())
+        self.assertTrue(self.route_with_timestamps.has_timestamps())
 
 
 if __name__ == "__main__":
