@@ -75,6 +75,12 @@ class TestPointMethods(unittest.TestCase):
         timestamps = [p.timestamp for p in r]
         self.assertTrue(timestamps == sorted(timestamps))
 
+    def test_has_timestamps(self):
+        route_without_timestamps = Route([Point([0, 0])])
+        self.assertFalse(route_without_timestamps.has_timestamps())
+        route_with_timestamps = Route([PointT([0, 0], timestamp=0)])
+        self.assertTrue(route_with_timestamps.has_timestamps())
+
 
 if __name__ == "__main__":
     unittest.main()
