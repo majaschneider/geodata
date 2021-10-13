@@ -19,7 +19,7 @@ class Route(list):
         bool
             True, if route is not empty and points have timestamps, else False.
         """
-        return len(self) > 0 and type(self[0]) is PointT
+        return len(self) > 0 and isinstance(self[0], PointT)
 
     def __init__(self, route=None):
         """
@@ -184,7 +184,7 @@ class Route(list):
 
         """
         if len(self) > 0:
-            if not type(self[0]) is PointT:
+            if not isinstance(self[0], PointT):
                 raise Exception("sort_by_time only applies to routes with items of type PointT.")
         self.sort(key=lambda item: item.timestamp)
         return self
