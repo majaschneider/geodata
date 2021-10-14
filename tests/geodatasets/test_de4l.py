@@ -8,6 +8,7 @@ import pandas as pd
 
 from geodatasets.de4l import De4lSensorDataset
 from geodata.route import Route
+from geodata.point_t import PointT
 
 
 class TestDe4lSensorDataset(unittest.TestCase):
@@ -34,6 +35,10 @@ class TestDe4lSensorDataset(unittest.TestCase):
                     self.assertGreaterEqual(1, point.x_lon)
                     self.assertGreaterEqual(point.y_lat, 0)
                     self.assertGreaterEqual(1, point.y_lat)
+
+        route_with_timestamps = self.dataset[0]["route_with_timestamps"]
+        # route contains points with timestamps
+        self.assertTrue(isinstance(route_with_timestamps[0], PointT))
 
     def test_parse_date(self):
         date_string = '2021-02-16T09:45:02.000Z'
