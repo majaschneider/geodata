@@ -58,7 +58,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
         """
-        data_frame["route"] = data_frame["POLYLINE"].apply(lambda x: self.route_str_to_list(x))
+        data_frame["route"] = data_frame["POLYLINE"].apply(self.route_str_to_list)
         data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
@@ -76,7 +76,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         return len(self.data_frame)
 
     def __max_route_len__(self):
-        return self.data_frame["route"].transform(lambda x: len(x)).max()
+        return self.data_frame["route"].transform(len).max()
 
     def __getitem__(self, idx):
         """
@@ -159,11 +159,11 @@ class TaxiServiceTrajectoryDataset(Dataset):
             A route in list format.
 
         """
-        transformed = list()
+        transformed = []
         route = route.replace(" ", "").replace("],[", "];[").replace("[[", "[").replace("]]", "]").split(";")
         for point in route:
-            p = point.replace("[", "").replace("]", "").split(",")
-            transformed.append([float(p[0]), float(p[1])])
+            point = point.replace("[", "").replace("]", "").split(",")
+            transformed.append([float(point[0]), float(point[1])])
         return transformed
 
     @classmethod
@@ -215,7 +215,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         TaxiServiceTrajectoryDataset
             A TaxiServiceTrajectoryDataset created from the given csv.
         """
-        assert type(path) == str
+        assert isinstance(path, str)
         assert path[-4:] == '.csv'
 
         if isinstance(limit, int):

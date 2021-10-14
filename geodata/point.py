@@ -24,8 +24,8 @@ def get_bearing(point_a, point_b):
         The initial bearing in radian, which followed in a straight line along a great-circle arc, starting at the
         start point will arrive at the end point.
     """
-    assert(point_a.get_geo_reference_system() == 'latlon')
-    assert(point_b.get_geo_reference_system() == 'latlon')
+    assert point_a.get_geo_reference_system() == 'latlon'
+    assert point_b.get_geo_reference_system() == 'latlon'
     lon1, lat1 = point_a
     lon2, lat2 = point_b
     bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
@@ -51,7 +51,7 @@ def get_distance(point_a, point_b):
     """
     geo_ref_a = point_a.get_geo_reference_system()
     geo_ref_b = point_b.get_geo_reference_system()
-    assert(geo_ref_a == geo_ref_b)
+    assert geo_ref_a == geo_ref_b
     if geo_ref_a == 'latlon':
         distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
                                 [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
@@ -153,7 +153,7 @@ class Point(list):
         ----------
         value : float
             New x-coordinate respectively longitude of this point.
-        
+
         Returns
         -------
         point
@@ -169,7 +169,7 @@ class Point(list):
         ----------
         value : float
             New y-coordinate respectively latitude of this point.
-        
+
         Returns
         -------
         point
@@ -253,9 +253,9 @@ class Point(list):
             The modified point instance.
         """
         if self.get_geo_reference_system() == "latlon":
-            r = self.__earth_radius / 1000  # km
-            self.set_x_lon(r * self.x_lon)
-            self.set_y_lat(r * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
+            radius = self.__earth_radius / 1000  # km
+            self.set_x_lon(radius * self.x_lon)
+            self.set_y_lat(radius * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
             self.set_geo_reference_system("cartesian")
         else:
             warnings.warn("geo reference system is already cartesian.")

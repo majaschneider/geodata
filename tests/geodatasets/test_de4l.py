@@ -1,9 +1,11 @@
 import datetime
 import unittest
+import math
 
 import dateutil.parser
 import torch
 import pandas as pd
+
 from geodatasets.de4l import De4lSensorDataset
 from geodata.route import Route
 
@@ -22,7 +24,7 @@ class TestDe4lSensorDataset(unittest.TestCase):
         route_len = 60
         self.setup_dataloader(file_path="tests/resources/test-sensor-dataset.json", route_len=route_len)
         for batch in self.dataloader:
-            for route_tensor in batch["route_scaled_padded"]:
+            for route_tensor in batch["route_tensor_scaled_padded"]:
                 # routes have same length
                 self.assertEqual(len(route_tensor), route_len)
                 # routes are scaled to [0, 1]
@@ -44,7 +46,7 @@ class TestDe4lSensorDataset(unittest.TestCase):
     def test_calculate_location_bounds(self):
         self.setup_dataloader(file_path="tests/resources/test-sensor-dataset-small.json", route_len=1)
         location_bounds = De4lSensorDataset.calculate_location_bounds(self.data_frame)
-        self.assertEqual((11.61, 11.62, 50.77, 50.87), location_bounds)
+        self.assertEqual((math.radians(11.61), math.radians(11.62), math.radians(50.77), math.radians(50.87)), location_bounds)
 
     def test_create_from_json(self):
         path = "tests/resources/test-sensor-dataset.json"

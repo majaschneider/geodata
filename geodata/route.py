@@ -3,7 +3,7 @@
 
 import torch
 from geodata.point import Point
-from geodata.pointT import PointT
+from geodata.point_t import PointT
 
 
 class Route(list):
@@ -19,7 +19,7 @@ class Route(list):
         bool
             True, if route is not empty and points have timestamps, else False.
         """
-        return len(self) > 0 and type(self[0]) is PointT
+        return len(self) > 0 and isinstance(self[0], PointT)
 
     def __init__(self, route=None):
         """
@@ -81,7 +81,7 @@ class Route(list):
         Route
             The tensor object transformed into a Route object.
         """
-        return cls(tensor.numpy().tolist())
+        return cls(tensor.detach().numpy().tolist())
 
     def append(self, value):
         """
@@ -163,16 +163,15 @@ class Route(list):
         """
         if len(self) > 0:
             if not type(self[0]) is Point:
-                raise Exception("pad only applies to routes with items of type Point. No subclasses of pad are allowed."
-                                )
-        route = self
+                raise Exception("pad only applies to routes with items of type Point. No subclasses of Point are "
+                                "allowed.")
         pad_len = target_len - len(self)
         if pad_len > 0:
             tensor = torch.tensor(self)
             pad = torch.nn.ZeroPad2d((0, 0, 0, pad_len))
             tensor = pad(tensor)
-            route = self.__init__(tensor.numpy().tolist())
-        return route
+            self.__init__(tensor.numpy().tolist())
+        return self
 
     def sort_by_time(self):
         """
@@ -185,7 +184,7 @@ class Route(list):
 
         """
         if len(self) > 0:
-            if not type(self[0]) is PointT:
+            if not isinstance(self[0], PointT):
                 raise Exception("sort_by_time only applies to routes with items of type PointT.")
         self.sort(key=lambda item: item.timestamp)
         return self

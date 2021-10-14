@@ -36,33 +36,33 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(Point, type(Point([0, 1])))
 
     def test_append(self):
-        p = Point([0, 0])
+        point = Point([0, 0])
         with self.assertWarns(UserWarning):
-            p.append([1, 1])
+            point.append([1, 1])
 
     def test_set_x_lon(self):
-        p = Point([0, 0])
+        point = Point([0, 0])
         value = 1
-        p.set_x_lon(value)
-        self.assertEqual(value, p.x_lon)
-        self.assertEqual(value, p[0])
+        point.set_x_lon(value)
+        self.assertEqual(value, point.x_lon)
+        self.assertEqual(value, point[0])
 
     def test_set_y_lat(self):
-        p = Point([0, 0])
+        point = Point([0, 0])
         value = 1
-        p.set_y_lat(value)
-        self.assertEqual(value, p.y_lat)
-        self.assertEqual(value, p[1])
+        point.set_y_lat(value)
+        self.assertEqual(value, point.y_lat)
+        self.assertEqual(value, point[1])
 
     def test_set_geo_reference_system(self):
-        p = Point([0, 0])
+        point = Point([0, 0])
         with self.assertRaises(AssertionError):
-            p.set_geo_reference_system("invalid_value")
+            point.set_geo_reference_system("invalid_value")
         try:
-            p.set_geo_reference_system("cartesian")
-            self.assertEqual("cartesian", p.get_geo_reference_system())
-            p.set_geo_reference_system("latlon")
-            self.assertEqual("latlon", p.get_geo_reference_system())
+            point.set_geo_reference_system("cartesian")
+            self.assertEqual("cartesian", point.get_geo_reference_system())
+            point.set_geo_reference_system("latlon")
+            self.assertEqual("latlon", point.get_geo_reference_system())
         except Exception:
             self.fail("Unexpected exception when invoking set_geo_reference_system().")
 
@@ -75,23 +75,23 @@ class TestPointMethods(unittest.TestCase):
     def test_conversion_geo_reference_systems(self):
         lat_start = math.radians(53)
         lon_start = math.radians(21)
-        p = Point([lon_start, lat_start])
-        p.to_cartesian()
-        p.to_latlon()
+        point = Point([lon_start, lat_start])
+        point.to_cartesian()
+        point.to_latlon()
         accuracy = 10
         # conversion between geo-reference systems yields the approximate same coordinates
-        self.assertEqual(get_digits(lon_start, accuracy), get_digits(p.x_lon, accuracy))
-        self.assertEqual(get_digits(lat_start, accuracy), get_digits(p.y_lat, accuracy))
+        self.assertEqual(get_digits(lon_start, accuracy), get_digits(point.x_lon, accuracy))
+        self.assertEqual(get_digits(lat_start, accuracy), get_digits(point.y_lat, accuracy))
         # walk along the equator for 100 meters
         lat_start = math.radians(0)
         lon_start = math.radians(0)
         distance = 100  # meters
         y_new = 0 + distance / 1000  # move 0.1 km east along equator
-        p = Point([lon_start, lat_start])
-        p.add_vector(distance, 0)
-        p.to_cartesian()
-        self.assertEqual(get_digits(lon_start, accuracy), get_digits(p.x_lon, accuracy))
-        self.assertEqual(get_digits(y_new, accuracy), get_digits(p.y_lat, accuracy))
+        point = Point([lon_start, lat_start])
+        point.add_vector(distance, 0)
+        point.to_cartesian()
+        self.assertEqual(get_digits(lon_start, accuracy), get_digits(point.x_lon, accuracy))
+        self.assertEqual(get_digits(y_new, accuracy), get_digits(point.y_lat, accuracy))
 
     def test_get_bearing(self):
         # test bearing in cartesian plane

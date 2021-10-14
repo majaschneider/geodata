@@ -1,4 +1,8 @@
+"""Provides a class for reading and preprocessing data from project DE4L.
+"""
+
 import datetime
+from math import radians
 
 import dateutil.parser
 import numpy as np
@@ -43,7 +47,7 @@ class De4lSensorDataset(Dataset):
         else:
             self.location_bounds = location_bounds
 
-        data_frame["timestamp"] = data_frame["timestamp"].apply(lambda x: self.parse_date(x))
+        data_frame["timestamp"] = data_frame["timestamp"].apply(self.parse_date)
 
         # day of the week from 0 to 6
         data_frame["day_of_week"] = data_frame["timestamp"].apply(lambda x: x.isoweekday() - 1)
@@ -59,6 +63,21 @@ class De4lSensorDataset(Dataset):
         return int(np.ceil(len(self.data_frame) / self.route_len))
 
     def __getitem__(self, idx):
+        """
+        Provides a data sample containing one hot encoded time features and routes with timestamps as well as scaled and
+        padded routes.
+
+        Parameters
+        ----------
+        idx : int
+            The index of a route.
+
+        Returns
+        -------
+        sample : dict
+            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route_tensor_raw_padded' and
+            'route_tensor_scaled_padded'.
+        """
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
@@ -76,7 +95,7 @@ class De4lSensorDataset(Dataset):
         route = Route()
         for i in range(start_idx, min(start_idx + self.route_len, len(self.data_frame))):
             location = self.data_frame.loc[i, "location"]
-            route.append(list([location["lon"], location["lat"]]))
+            route.append(list([radians(location["lon"]), radians(location["lat"])]))
 
             # one hot encoding
             day_of_week_one_hot[route_idx] = one_hot(torch.tensor(self.data_frame.loc[i, "day_of_week"]), num_classes=7)
@@ -86,6 +105,7 @@ class De4lSensorDataset(Dataset):
             )
             month_one_hot[route_idx] = one_hot(torch.tensor(self.data_frame.loc[i, "month"]), num_classes=12)
             route_idx += 1
+
         route_raw_padded = Route(route)
         route_raw_padded.pad(self.route_len)
         route_tensor_raw_padded = torch.tensor(route_raw_padded, dtype=torch.float64, requires_grad=True)
@@ -99,8 +119,8 @@ class De4lSensorDataset(Dataset):
             "quarter_hour_of_day": quarter_hour_of_day_one_hot,
             "month": month_one_hot,
             # if any other route format is required, it can be added here
-            "route": route_tensor_raw_padded,
-            "route_scaled_padded": route_tensor_scaled_padded,
+            "route_tensor_raw_padded": route_tensor_raw_padded,
+            "route_tensor_scaled_padded": route_tensor_scaled_padded,
         }
 
         return sample
@@ -123,11 +143,11 @@ class De4lSensorDataset(Dataset):
         try:
             parsed_date = dateutil.parser.parse(date)
             return parsed_date
-        except TypeError:
+        except TypeError as error:
             if isinstance(date, datetime.datetime):
                 return date
             else:
-                raise(TypeError("A timestamp could not be parsed. Please check for correct format."))
+                raise TypeError("A timestamp could not be parsed. Please check for correct format.") from error
 
     @classmethod
     def calculate_location_bounds(cls, data_frame):
@@ -145,10 +165,10 @@ class De4lSensorDataset(Dataset):
         longitude_min, longitude_max, latitude_min, latitude_max : float
             The minimum and maximum location coordinates of all route points.
         """
-        longitude_min = min(data_frame["location"].apply(lambda x: x["lon"]))
-        longitude_max = max(data_frame["location"].apply(lambda x: x["lon"]))
-        latitude_min = min(data_frame["location"].apply(lambda x: x["lat"]))
-        latitude_max = max(data_frame["location"].apply(lambda x: x["lat"]))
+        longitude_min = min(data_frame["location"].apply(lambda x: radians(x["lon"])))
+        longitude_max = max(data_frame["location"].apply(lambda x: radians(x["lon"])))
+        latitude_min = min(data_frame["location"].apply(lambda x: radians(x["lat"])))
+        latitude_max = max(data_frame["location"].apply(lambda x: radians(x["lat"])))
         return longitude_min, longitude_max, latitude_min, latitude_max
 
     @classmethod
