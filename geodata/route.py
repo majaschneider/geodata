@@ -163,8 +163,8 @@ class Route(list):
         """
         if len(self) > 0:
             if not type(self[0]) is Point:
-                raise Exception("pad only applies to routes with items of type Point. No subclasses of pad are allowed."
-                                )
+                raise Exception("pad only applies to routes with items of type Point. No subclasses of Point are "
+                                "allowed.")
         pad_len = target_len - len(self)
         if pad_len > 0:
             tensor = torch.tensor(self)
