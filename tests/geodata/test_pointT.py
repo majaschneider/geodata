@@ -1,5 +1,8 @@
 import unittest
 import math
+import datetime
+
+import pandas
 
 from geodata.point_t import PointT, get_interpolated_point
 
@@ -13,10 +16,21 @@ class TestPointMethods(unittest.TestCase):
         lon_start = math.radians(-1.729722)  # 001°43′47″W
         lat_end = math.radians(53.188432)  # 53°11′18″N
         lon_end = math.radians(0.133333)  # 000°08'00"E
-        self.start_point = PointT([lon_start, lat_start], timestamp=1)
-        self.end_point = PointT([lon_end, lat_end], timestamp=2)
+        self.start_point = PointT([lon_start, lat_start], timestamp=pandas.Timestamp(1))
+        self.end_point = PointT([lon_end, lat_end], timestamp=pandas.Timestamp(2))
         self.angle = math.radians(96.021667)  # 096°01′18″
         self.distance = 124_801  # meters
+
+    def test_constructor(self):
+        with self.assertRaises(TypeError):
+            PointT([0, 0], timestamp=0)
+            PointT([0, 0], timestamp=0.)
+            PointT([0, 0], timestamp="0")
+            PointT([0, 0], timestamp=datetime.datetime.timestamp(0))
+        try:
+            PointT([0, 0], timestamp=pandas.Timestamp(0))
+        except Exception:
+            self.fail("Unexpected exception when invoking __init_().")
 
     def test_get_interpolated_point(self):
         ratio = 0.5
