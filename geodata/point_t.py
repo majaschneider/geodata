@@ -1,5 +1,6 @@
 """Provides a point datatype for geo-coordinates and timestamps and their manipulation.
 """
+import pandas
 
 from geodata.point import Point, get_interpolated_point as get_interpolated
 
@@ -43,7 +44,7 @@ class PointT(Point):
         coordinates : list
             Contains the x- and y-coordinate of this point in the form [x,y]. If geo_reference_system
             is 'latlon', the values [x,y] refer to [longitude, latitude] in radian.
-        timestamp
+        timestamp : pandas.Timestamp
             The timestamp assigned to this point.
         geo_reference_system : {'latlon', 'cartesian'}
             Geographical reference system of the coordinates:
@@ -51,4 +52,7 @@ class PointT(Point):
             - 'cartesian': uses Euclidean space
         """
         super().__init__(coordinates, geo_reference_system)
-        self.timestamp = timestamp
+        if isinstance(timestamp, pandas.Timestamp):
+            self.timestamp = timestamp
+        else:
+            raise TypeError("Timestamp needs to be of type pandas.Timestamp.")

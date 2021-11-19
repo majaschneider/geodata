@@ -1,6 +1,9 @@
 import random
 import unittest
+
 import torch
+from pandas import Timestamp
+
 from geodata.route import Route
 from geodata.point import Point
 from geodata.point_t import PointT
@@ -9,7 +12,7 @@ from geodata.point_t import PointT
 class TestPointMethods(unittest.TestCase):
     def setUp(self) -> None:
         self.route_without_timestamps = Route([Point([0, 0])])
-        self.route_with_timestamps = Route([PointT([0, 0], timestamp=0)])
+        self.route_with_timestamps = Route([PointT([0, 0], timestamp=Timestamp(0))])
 
     def test_constructor(self):
         # initializes with empty list
@@ -90,7 +93,7 @@ class TestPointMethods(unittest.TestCase):
 
         route = Route()
         for i in range(100):
-            route.append(PointT([1, 1], timestamp=random.randint(0, 1_000)))
+            route.append(PointT([1, 1], timestamp=Timestamp(random.randint(0, 1_000))))
         route.sort_by_time()
         timestamps = [p.timestamp for p in route]
         self.assertTrue(timestamps == sorted(timestamps))
