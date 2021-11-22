@@ -4,6 +4,7 @@ process and work with this dataset.
 Source: https://www.kaggle.com/c/pkdd-15-taxi-trip-time-prediction-ii/data
 """
 import datetime
+import warnings
 
 import torch
 import numpy as np
@@ -59,6 +60,8 @@ class TaxiServiceTrajectoryDataset(Dataset):
             minimum, latitude maximum). If None, values will be calculated from data_frame.
         """
         data_frame["route"] = data_frame["POLYLINE"].apply(self.route_str_to_list)
+        # remove all rows that have caused polyline parsing issues
+        data_frame = data_frame[data_frame["POLYLINE"] != "[]"]
         data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
@@ -160,10 +163,14 @@ class TaxiServiceTrajectoryDataset(Dataset):
 
         """
         transformed = []
-        route = route.replace(" ", "").replace("],[", "];[").replace("[[", "[").replace("]]", "]").split(";")
-        for point in route:
-            point = point.replace("[", "").replace("]", "").split(",")
-            transformed.append([float(point[0]), float(point[1])])
+        try:
+            route = route.replace(" ", "").replace("],[", "];[").replace("[[", "[").replace("]]", "]").split(";")
+            for point in route:
+                point = point.replace("[", "").replace("]", "").split(",")
+                transformed.append([float(point[0]), float(point[1])])
+        except Exception:
+            warnings.warn("An error occurred during parsing of route from string to list. An empty list will be "
+                          "returned.")
         return transformed
 
     @classmethod
