@@ -2,8 +2,8 @@
 """
 
 import torch
-from geodata.point import Point
-from geodata.point_t import PointT
+from de4l_geodata.geodata.point import Point
+from de4l_geodata.geodata.point_t import PointT
 
 
 class Route(list):

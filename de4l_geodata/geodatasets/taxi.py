@@ -11,7 +11,7 @@ import pandas as pd
 from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
-from geodata.route import Route
+from de4l_geodata.geodata.route import Route
 
 
 class TaxiServiceTrajectoryDataset(Dataset):

@@ -4,9 +4,9 @@ import unittest
 import torch
 from pandas import Timestamp
 
-from geodata.route import Route
-from geodata.point import Point
-from geodata.point_t import PointT
+from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.point import Point
+from de4l_geodata.geodata.point_t import PointT
 
 
 class TestPointMethods(unittest.TestCase):
