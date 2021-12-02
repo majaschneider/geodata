@@ -1,5 +1,5 @@
 import unittest
-from helper.helper import get_digits
+from de4l_geodata.helper.helper import get_digits
 
 
 class TestHelper(unittest.TestCase):

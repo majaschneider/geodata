@@ -1,4 +1,0 @@
-numpy~=1.21.2
-torch~=1.9.0
-pandas
-haversine~=2.5.1

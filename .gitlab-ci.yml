@@ -25,16 +25,13 @@ variables:
 cache:
   paths:
     - .cache/pip
-    - venv/
 
 before_script:
   - python --version # Print Python version for debugging
   - pip install --upgrade pip
   - pip --version # Print pip version for debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - pip install -r requirements.txt
+  - pip install poetry
+  - poetry install --extras torch
 
 stages:
   - code analysis
@@ -60,5 +57,4 @@ unittest:
   stage: test
   script:
     - echo "Running tests"
-    - export PYTHONPATH="$PYTHONPATH:."
-    - python -m unittest discover -v
+    - poetry run python -m unittest discover -v
