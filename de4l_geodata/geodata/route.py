@@ -35,7 +35,8 @@ class Route(list):
         if route is not None:
             # set list items if any
             super().__init__(route)
-            assert isinstance(route, list)
+            if not isinstance(route, list):
+                raise ValueError("If route is provided, it needs to be of type list.")
             # make sure list items are of type Point
             for idx, point in enumerate(route):
                 if not isinstance(point, Point):

@@ -56,7 +56,7 @@ class TestPointMethods(unittest.TestCase):
 
     def test_set_geo_reference_system(self):
         point = Point([0, 0])
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             point.set_geo_reference_system("invalid_value")
         try:
             point.set_geo_reference_system("cartesian")

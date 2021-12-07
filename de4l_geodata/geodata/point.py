@@ -24,8 +24,8 @@ def get_bearing(point_a, point_b):
         The initial bearing in radian, which followed in a straight line along a great-circle arc, starting at the
         start point will arrive at the end point.
     """
-    assert point_a.get_geo_reference_system() == 'latlon'
-    assert point_b.get_geo_reference_system() == 'latlon'
+    if point_a.get_geo_reference_system() != 'latlon' or point_b.get_geo_reference_system() != 'latlon':
+        raise ValueError("Both points need to be in 'latlon' format.")
     lon1, lat1 = point_a
     lon2, lat2 = point_b
     bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
@@ -51,7 +51,8 @@ def get_distance(point_a, point_b):
     """
     geo_ref_a = point_a.get_geo_reference_system()
     geo_ref_b = point_b.get_geo_reference_system()
-    assert geo_ref_a == geo_ref_b
+    if geo_ref_a != geo_ref_b:
+        raise ValueError("Both points need to have the same geo_reference_system.")
     if geo_ref_a == 'latlon':
         distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
                                 [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
@@ -113,10 +114,11 @@ class Point(list):
         self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
-        assert isinstance(coordinates, list)
-        assert len(coordinates) == 2
+        if not (isinstance(coordinates, list) and len(coordinates) == 2):
+            raise ValueError("Coordinates need to be a list with two elements.")
         for i in range(2):
-            assert type(coordinates[i]) in (int, float, np.float64)
+            if type(coordinates[i]) not in (int, float, np.float64):
+                raise ValueError("Coordinates need to be of type int or float.")
 
     def append(self, obj):
         warnings.warn("Point class does not provide append functionality. Use set instead.")
@@ -193,7 +195,8 @@ class Point(list):
         point
             The modified point instance.
         """
-        assert value in ("cartesian", "latlon")
+        if value not in ("cartesian", "latlon"):
+            raise ValueError("Geo reference system can only be 'latlon' or 'cartesian'.")
         self.__geo_reference_system = value
         return self
 
@@ -258,7 +261,7 @@ class Point(list):
             self.set_y_lat(radius * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
             self.set_geo_reference_system("cartesian")
         else:
-            warnings.warn("geo reference system is already cartesian.")
+            warnings.warn("Geo reference system is already cartesian.")
         return self
 
     def to_latlon(self):
@@ -276,5 +279,5 @@ class Point(list):
             self.set_y_lat(np.pi / 2 - 2 * np.arctan(np.exp(-self.y_lat / r)))
             self.set_geo_reference_system("latlon")
         else:
-            warnings.warn("geo reference system is already latlon.")
+            warnings.warn("Geo reference system is already latlon.")
         return self
