@@ -155,13 +155,8 @@ class Point(list):
         ----------
         value : float
             New x-coordinate respectively longitude of this point.
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
-        return self.__setitem__(0, value)
+        self.__setitem__(0, value)
 
     def set_y_lat(self, value):
         """
@@ -171,13 +166,8 @@ class Point(list):
         ----------
         value : float
             New y-coordinate respectively latitude of this point.
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
-        return self.__setitem__(1, value)
+        self.__setitem__(1, value)
 
     def set_geo_reference_system(self, value):
         """
@@ -189,16 +179,10 @@ class Point(list):
             New geographical reference system of this point:
             - 'latlon': latitude and longitude coordinates on earth
             - 'cartesian': uses Euclidean space
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
         if value not in ("cartesian", "latlon"):
             raise ValueError("Geo reference system can only be 'latlon' or 'cartesian'.")
         self.__geo_reference_system = value
-        return self
 
     def get_geo_reference_system(self):
         """
