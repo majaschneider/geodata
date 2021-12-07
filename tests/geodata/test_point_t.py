@@ -43,7 +43,7 @@ class TestPointMethods(unittest.TestCase):
         point_list = [point]
         point_copy = point.deep_copy()
         point_copy.timestamp = pandas.Timestamp(1)
-        point_copy.to_latlon()
+        point_copy.to_latlon_()
         # changing the copy does not change the original point
         self.assertEqual(pandas.Timestamp(0), point.timestamp)
         self.assertEqual('cartesian', point.get_geo_reference_system())

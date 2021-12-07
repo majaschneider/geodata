@@ -111,7 +111,7 @@ class TestPointMethods(unittest.TestCase):
         for route in [route_without_timestamps, route_with_timestamps]:
             route_copy = route.deep_copy()
             route_copy[0].set_x_lon(5)
-            route_copy[0].to_cartesian()
+            route_copy[0].to_cartesian_()
             self.assertEqual(0, route[0].x_lon)
             self.assertEqual('latlon', route[0].get_geo_reference_system())
 
