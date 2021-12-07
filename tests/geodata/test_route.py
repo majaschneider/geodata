@@ -1,6 +1,7 @@
 import random
 import unittest
 
+import pandas
 import torch
 from pandas import Timestamp
 
@@ -101,6 +102,18 @@ class TestPointMethods(unittest.TestCase):
     def test_has_timestamps(self):
         self.assertFalse(self.route_without_timestamps.has_timestamps())
         self.assertTrue(self.route_with_timestamps.has_timestamps())
+
+    def test_deep_copy(self):
+        route_without_timestamps = Route([[0, 0], [1, 1]])
+        route_with_timestamps = Route([PointT([0, 0], timestamp=pandas.Timestamp(0)),
+                                       PointT([1, 1], timestamp=pandas.Timestamp(1))])
+        self.assertTrue(route_with_timestamps.deep_copy().has_timestamps())
+        for route in [route_without_timestamps, route_with_timestamps]:
+            route_copy = route.deep_copy()
+            route_copy[0].set_x_lon(5)
+            route_copy[0].to_cartesian()
+            self.assertEqual(0, route[0].x_lon)
+            self.assertEqual('latlon', route[0].get_geo_reference_system())
 
 
 if __name__ == "__main__":

@@ -265,3 +265,14 @@ class Point(list):
         else:
             warnings.warn("Geo reference system is already latlon.")
         return self
+
+    def deep_copy(self):
+        """
+        Creates a deep copy of this point preserving its properties.
+
+        Returns
+        -------
+        Point
+            A deep copy of this point.
+        """
+        return Point(self, geo_reference_system=self.__geo_reference_system)

@@ -119,6 +119,18 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(get_bearing(self.start_point, self.end_point),
                                get_bearing(self.start_point, interpolated_point))
 
+    def test_point_copy(self):
+        point = Point([0, 0], geo_reference_system='cartesian')
+        point_list = [point]
+        point_copy = point.deep_copy()
+        point_copy.set_x_lon(1)
+        point_copy.to_latlon()
+        # changing the copy does not change the original point
+        self.assertEqual(0, point.x_lon)
+        self.assertEqual('cartesian', point.get_geo_reference_system())
+        # the original point object is not changed
+        self.assertEqual(point, point_list[0])
+
 
 if __name__ == "__main__":
     unittest.main()
