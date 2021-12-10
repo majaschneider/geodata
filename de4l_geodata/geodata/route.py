@@ -35,7 +35,8 @@ class Route(list):
         if route is not None:
             # set list items if any
             super().__init__(route)
-            assert isinstance(route, list)
+            if not isinstance(route, list):
+                raise ValueError("If route is provided, it needs to be of type list.")
             # make sure list items are of type Point
             for idx, point in enumerate(route):
                 if not isinstance(point, Point):
@@ -188,3 +189,17 @@ class Route(list):
                 raise Exception("sort_by_time only applies to routes with items of type PointT.")
         self.sort(key=lambda item: item.timestamp)
         return self
+
+    def deep_copy(self):
+        """
+        Creates a deep copy of this route preserving its properties.
+
+        Returns
+        -------
+        Route
+            A deep copy of this route.
+        """
+        route_copy = Route()
+        for point in self:
+            route_copy.append(point.deep_copy())
+        return route_copy

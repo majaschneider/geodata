@@ -37,3 +37,15 @@ class TestPointMethods(unittest.TestCase):
         # test interpolation on Earth
         interpolated_point = get_interpolated_point(self.start_point, self.end_point, ratio)
         self.assertEqual(self.start_point.timestamp, interpolated_point.timestamp)
+
+    def test_point_copy(self):
+        point = PointT([0, 0], timestamp=pandas.Timestamp(0), geo_reference_system='cartesian')
+        point_list = [point]
+        point_copy = point.deep_copy()
+        point_copy.timestamp = pandas.Timestamp(1)
+        point_copy.to_latlon_()
+        # changing the copy does not change the original point
+        self.assertEqual(pandas.Timestamp(0), point.timestamp)
+        self.assertEqual('cartesian', point.get_geo_reference_system())
+        # the original point object is not changed
+        self.assertEqual(point, point_list[0])

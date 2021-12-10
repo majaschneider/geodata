@@ -56,3 +56,14 @@ class PointT(Point):
             self.timestamp = timestamp
         else:
             raise TypeError("Timestamp needs to be of type pandas.Timestamp.")
+
+    def deep_copy(self):
+        """
+        Creates a deep copy of this point preserving its properties.
+
+        Returns
+        -------
+        Point
+            A deep copy of this point.
+        """
+        return PointT(self, timestamp=self.timestamp, geo_reference_system=self.get_geo_reference_system())

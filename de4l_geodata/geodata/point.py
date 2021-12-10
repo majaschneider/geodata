@@ -24,8 +24,8 @@ def get_bearing(point_a, point_b):
         The initial bearing in radian, which followed in a straight line along a great-circle arc, starting at the
         start point will arrive at the end point.
     """
-    assert point_a.get_geo_reference_system() == 'latlon'
-    assert point_b.get_geo_reference_system() == 'latlon'
+    if point_a.get_geo_reference_system() != 'latlon' or point_b.get_geo_reference_system() != 'latlon':
+        raise ValueError("Both points need to be in 'latlon' format.")
     lon1, lat1 = point_a
     lon2, lat2 = point_b
     bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
@@ -51,7 +51,8 @@ def get_distance(point_a, point_b):
     """
     geo_ref_a = point_a.get_geo_reference_system()
     geo_ref_b = point_b.get_geo_reference_system()
-    assert geo_ref_a == geo_ref_b
+    if geo_ref_a != geo_ref_b:
+        raise ValueError("Both points need to have the same geo_reference_system.")
     if geo_ref_a == 'latlon':
         distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
                                 [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
@@ -83,7 +84,7 @@ def get_interpolated_point(start_point, end_point, ratio):
     geo_ref = start_point.get_geo_reference_system()
     if geo_ref == 'latlon':
         interpolated_point = Point(start_point, geo_reference_system=geo_ref)
-        interpolated_point.add_vector(ratio * get_distance(start_point, end_point), get_bearing(start_point, end_point))
+        interpolated_point.add_vector_(ratio * get_distance(start_point, end_point), get_bearing(start_point, end_point))
     else:
         raise NotImplementedError("Interpolating in the cartesian plane is not available.")
     return interpolated_point
@@ -113,10 +114,11 @@ class Point(list):
         self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
-        assert isinstance(coordinates, list)
-        assert len(coordinates) == 2
+        if not (isinstance(coordinates, list) and len(coordinates) == 2):
+            raise ValueError("Coordinates need to be a list with two elements.")
         for i in range(2):
-            assert type(coordinates[i]) in (int, float, np.float64)
+            if type(coordinates[i]) not in (int, float, np.float64):
+                raise ValueError("Coordinates need to be of type int or float.")
 
     def append(self, obj):
         warnings.warn("Point class does not provide append functionality. Use set instead.")
@@ -153,13 +155,8 @@ class Point(list):
         ----------
         value : float
             New x-coordinate respectively longitude of this point.
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
-        return self.__setitem__(0, value)
+        self.__setitem__(0, value)
 
     def set_y_lat(self, value):
         """
@@ -169,13 +166,8 @@ class Point(list):
         ----------
         value : float
             New y-coordinate respectively latitude of this point.
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
-        return self.__setitem__(1, value)
+        self.__setitem__(1, value)
 
     def set_geo_reference_system(self, value):
         """
@@ -187,15 +179,10 @@ class Point(list):
             New geographical reference system of this point:
             - 'latlon': latitude and longitude coordinates on earth
             - 'cartesian': uses Euclidean space
-
-        Returns
-        -------
-        point
-            The modified point instance.
         """
-        assert value in ("cartesian", "latlon")
+        if value not in ("cartesian", "latlon"):
+            raise ValueError("Geo reference system can only be 'latlon' or 'cartesian'.")
         self.__geo_reference_system = value
-        return self
 
     def get_geo_reference_system(self):
         """
@@ -208,10 +195,11 @@ class Point(list):
         """
         return self.__geo_reference_system
 
-    def add_vector(self, distance, angle):
+    def add_vector_(self, distance, angle):
         """
-        Adds a vector to a point. The vector is defined by its length and angle. For details see 'Destination point
-        given distance and bearing from start point' at http://www.movable-type.co.uk/scripts/latlong.html
+        Adds a vector to this point and modifies it instantly. The vector is defined by its length and angle. For
+        details see 'Destination point given distance and bearing from start point' at
+        http://www.movable-type.co.uk/scripts/latlong.html
 
         Parameters
         ----------
@@ -219,11 +207,6 @@ class Point(list):
             Vector length in meters.
         angle : float
             Angle of vector in radian.
-
-        Returns
-        -------
-        point : Point
-            The modified point instance.
         """
         if self.get_geo_reference_system() == "latlon":
             angular_distance = distance / self.__earth_radius
@@ -241,16 +224,33 @@ class Point(list):
             self.set_y_lat(latitude_tmp)
         else:
             raise NotImplementedError("Adding a vector onto a cartesian point is not available.")
-        return self
 
-    def to_cartesian(self):
+    def add_vector(self, distance, angle):
         """
-        Transforms coordinates of this point from latitude and longitude (both in radian) into cartesian.
+        Calculates the resulting point when a vector is added to this point. The vector is defined by its length and
+        angle. For details see 'Destination point given distance and bearing from start point' at
+        http://www.movable-type.co.uk/scripts/latlong.html
+
+        Parameters
+        ----------
+        distance : float
+            Vector length in meters.
+        angle : float
+            Angle of vector in radian.
 
         Returns
         -------
-        point
-            The modified point instance.
+        Point
+            A new point resulting from the input point to which the vector has been added.
+        """
+        point_copy = self.deep_copy()
+        point_copy.add_vector_(distance, angle)
+        return point_copy
+
+    def to_cartesian_(self):
+        """
+        Transforms coordinates of this point from latitude and longitude (both in radian) into cartesian. The point is
+        modified instantly.
         """
         if self.get_geo_reference_system() == "latlon":
             radius = self.__earth_radius / 1000  # km
@@ -258,17 +258,26 @@ class Point(list):
             self.set_y_lat(radius * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
             self.set_geo_reference_system("cartesian")
         else:
-            warnings.warn("geo reference system is already cartesian.")
-        return self
+            warnings.warn("Geo reference system is already cartesian.")
 
-    def to_latlon(self):
+    def to_cartesian(self):
         """
-        Transforms coordinates of this point from cartesian into latitude and longitude (both in radian).
+        Returns a copy of this point with coordinates changed from latitude and longitude (both in radian) into
+        cartesian.
 
         Returns
         -------
-        point
-            The modified point instance.
+        Point
+            A copy of this point with coordinates transformed into cartesian format.
+        """
+        point_copy = self.deep_copy()
+        point_copy.to_cartesian_()
+        return point_copy
+
+    def to_latlon_(self):
+        """
+        Transforms coordinates of this point from cartesian into latitude and longitude (both in radians). The point is
+        modified instantly.
         """
         if self.get_geo_reference_system() == "cartesian":
             r = self.__earth_radius / 1000  # km
@@ -276,5 +285,30 @@ class Point(list):
             self.set_y_lat(np.pi / 2 - 2 * np.arctan(np.exp(-self.y_lat / r)))
             self.set_geo_reference_system("latlon")
         else:
-            warnings.warn("geo reference system is already latlon.")
+            warnings.warn("Geo reference system is already latlon.")
         return self
+
+    def to_latlon(self):
+        """
+        Returns a copy of this point with coordinates changed from cartesian into latitude and longitude (both in
+        radians).
+
+        Returns
+        -------
+        Point
+            A copy of this point with coordinates transformed into 'latlon' format.
+        """
+        point_copy = self.deep_copy()
+        point_copy.to_latlon_()
+        return point_copy
+
+    def deep_copy(self):
+        """
+        Creates a deep copy of this point preserving its properties.
+
+        Returns
+        -------
+        Point
+            A deep copy of this point.
+        """
+        return Point(self, geo_reference_system=self.__geo_reference_system)
