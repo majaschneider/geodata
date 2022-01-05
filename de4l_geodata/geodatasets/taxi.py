@@ -59,10 +59,10 @@ class TaxiServiceTrajectoryDataset(Dataset):
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
         """
-        data_frame["route"] = data_frame["POLYLINE"].apply(self.route_str_to_list)
+        data_frame["route"] = data_frame["POLYLINE"].copy().apply(self.route_str_to_list)
         # remove all rows that have caused polyline parsing issues
         data_frame = data_frame[data_frame["POLYLINE"] != "[]"]
-        data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].apply(
+        data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy().apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
         self.data_frame = data_frame
