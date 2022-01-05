@@ -1,11 +1,12 @@
 import random
 import unittest
+import math
 
 import pandas
 import torch
 from pandas import Timestamp
 
-from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.route import Route, degrees_to_radians
 from de4l_geodata.geodata.point import Point
 from de4l_geodata.geodata.point_t import PointT
 
@@ -114,6 +115,11 @@ class TestPointMethods(unittest.TestCase):
             route_copy[0].to_cartesian_()
             self.assertEqual(0, route[0].x_lon)
             self.assertEqual('latlon', route[0].get_geo_reference_system())
+
+    def test_degrees_to_radians(self):
+        coordinates_list_degrees = [[-8, 41], [-8, 41]]
+        coordinates_list_radians = [[math.radians(-8), math.radians(41)], [math.radians(-8), math.radians(41)]]
+        self.assertEqual(coordinates_list_radians, degrees_to_radians(coordinates_list_degrees))
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import pandas as pd
 from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
-from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.route import Route, degrees_to_radians
 
 
 class TaxiServiceTrajectoryDataset(Dataset):
@@ -59,10 +59,13 @@ class TaxiServiceTrajectoryDataset(Dataset):
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
         """
-        data_frame["route"] = data_frame["POLYLINE"].apply(self.route_str_to_list)
+        data_frame["route"] = data_frame["POLYLINE"].copy().apply(self.route_str_to_list)
+        # taxi data is provided in format lonlat and degrees, geodata.route.Route requires lonlat and radians
+        data_frame["route"] = data_frame["route"].copy().apply(degrees_to_radians)
+
         # remove all rows that have caused polyline parsing issues
-        data_frame = data_frame[data_frame["POLYLINE"] != "[]"]
-        data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].apply(
+        data_frame.drop(data_frame.loc[data_frame["POLYLINE"] == "[]"].index, inplace=True)
+        data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy().apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
         self.data_frame = data_frame

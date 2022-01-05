@@ -1,3 +1,4 @@
+import math
 import unittest
 import torch
 import pandas as pd
@@ -40,7 +41,7 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         file_path = "tests/resources/test-taxi-dataset-small.csv"
         data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
         dataset = TaxiServiceTrajectoryDataset(data_frame)
-        location_bounds = (-8.61, -8.5, 41.1, 41.7)
+        location_bounds = (math.radians(-8.61), math.radians(-8.5), math.radians(41.1), math.radians(41.7))
         self.assertEqual(location_bounds, dataset.location_bounds)
 
     def test_create_from_csv(self):

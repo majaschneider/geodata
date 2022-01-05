@@ -2,8 +2,28 @@
 """
 
 import torch
+import de4l_geodata.geodata.point as pt
 from de4l_geodata.geodata.point import Point
 from de4l_geodata.geodata.point_t import PointT
+
+
+def degrees_to_radians(coordinate_list):
+    """
+    Returns a copy of coordinate_list converted to radians. Assumes that coordinate_list is a list of coordinates, that
+    are in degrees.
+
+    Parameters
+    ----------
+    coordinate_list : list
+        The coordinate list, with coordinates itself as list in 'latlon' and degree format, that is to be transformed.
+
+    Returns
+    -------
+    transformed_coordinates_list : list
+        The coordinate_list with each pair of coordinates transformed into degrees.
+    """
+    transformed_coordinate_list = [pt.degrees_to_radians(coordinates) for coordinates in coordinate_list]
+    return transformed_coordinate_list
 
 
 class Route(list):
