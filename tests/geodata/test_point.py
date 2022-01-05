@@ -1,7 +1,7 @@
 import unittest
 import math
 
-from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
+from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point, degrees_to_radians
 from de4l_geodata.helper.helper import get_digits
 
 
@@ -148,6 +148,11 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual('cartesian', point.get_geo_reference_system())
         # the original point object is not changed
         self.assertEqual(point, point_list[0])
+
+    def test_degrees_to_radians(self):
+        coordinates_degrees = [-8, 41]
+        coordinates_radians = [math.radians(-8), math.radians(41)]
+        self.assertEqual(coordinates_radians, degrees_to_radians(coordinates_degrees))
 
 
 if __name__ == "__main__":

@@ -90,6 +90,26 @@ def get_interpolated_point(start_point, end_point, ratio):
     return interpolated_point
 
 
+def degrees_to_radians(coordinates):
+    """
+    Returns a copy of coordinates converted to radians. Assumes that coordinates are in degrees.
+
+    Parameters
+    ----------
+    coordinates : list
+        The coordinates pair in 'latlon' and degree format that is to be transformed.
+
+    Returns
+    -------
+    transformed_coordinates : list
+        The coordinates transformed into degrees.
+    """
+    transformed_coordinates = list(coordinates)
+    for i in range(2):
+        transformed_coordinates[i] = math.radians(transformed_coordinates[i])
+    return transformed_coordinates
+
+
 class Point(list):
     """A point specifying a geographical location.
     """
