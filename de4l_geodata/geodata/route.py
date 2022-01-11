@@ -39,9 +39,15 @@ class Route(list):
         bool
             True, if route is not empty and points have timestamps, else False.
         """
-        return len(self) > 0 and isinstance(self[0], PointT)
+        has_timestamps = False
+        if len(self) > 0:
+            has_timestamps = True
+            for point in self:
+                if not isinstance(point, PointT):
+                    has_timestamps = False
+        return has_timestamps
 
-    def __init__(self, route=None):
+    def __init__(self, route=None, timestamps=None):
         """
         Creates a new Route object.
 
@@ -49,6 +55,8 @@ class Route(list):
         ----------
         route : list, optional
             The route, that this route should be initialized with.
+        timestamps : List, optional
+            The list of timestamps of each route point.
         """
         # initialize with empty list
         super().__init__()
@@ -57,10 +65,17 @@ class Route(list):
             super().__init__(route)
             if not isinstance(route, list):
                 raise ValueError("If route is provided, it needs to be of type list.")
+            if timestamps is not None:
+                # make sure timestamps are of same length as route
+                if not len(timestamps) == len(route):
+                    raise ValueError("Timestamps and route need to be of same length.")
             # make sure list items are of type Point
             for idx, point in enumerate(route):
-                if not isinstance(point, Point):
+                if timestamps is not None:
+                    self.__setitem__(idx, PointT(point, timestamps[idx]))
+                elif not isinstance(point, Point):
                     self.__setitem__(idx, Point(point))
+
             if self.has_timestamps():
                 self.sort_by_time()
 

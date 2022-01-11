@@ -2,7 +2,6 @@ import random
 import unittest
 import math
 
-import pandas
 import torch
 from pandas import Timestamp
 
@@ -33,6 +32,15 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(Route, type(Route([[0, 0], [1, 1]])))
         self.assertEqual(Route, type(Route([Point([0, 0])])))
         self.assertEqual(Route, type(Route([Point([0, 0]), Point([1, 1])])))
+        # successfully creates a route with timestamps
+        point_0 = [0, 0]
+        point_1 = [1, 1]
+        route = [point_0, point_1]
+        timestamp_0 = Timestamp(year=2022, month=1, day=2, hour=6, minute=30, second=0)
+        timestamp_1 = Timestamp(year=2022, month=1, day=2, hour=6, minute=30, second=5)
+        timestamps = [timestamp_0, timestamp_1]
+        expected_route = Route([PointT(point_0, timestamp=timestamp_0), PointT(point_1, timestamp=timestamp_1)])
+        self.assertEqual(expected_route, Route(route, timestamps))
 
     def test_set_item(self):
         # assures that list items are points
@@ -106,8 +114,8 @@ class TestPointMethods(unittest.TestCase):
 
     def test_deep_copy(self):
         route_without_timestamps = Route([[0, 0], [1, 1]])
-        route_with_timestamps = Route([PointT([0, 0], timestamp=pandas.Timestamp(0)),
-                                       PointT([1, 1], timestamp=pandas.Timestamp(1))])
+        route_with_timestamps = Route([PointT([0, 0], timestamp=Timestamp(0)),
+                                       PointT([1, 1], timestamp=Timestamp(1))])
         self.assertTrue(route_with_timestamps.deep_copy().has_timestamps())
         for route in [route_without_timestamps, route_with_timestamps]:
             route_copy = route.deep_copy()
