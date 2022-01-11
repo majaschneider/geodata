@@ -23,7 +23,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
     def __init__(self, data_frame, scale=False, location_bounds=None):
         """
         Initializes the dataset based on a pandas.DataFrame. Time between successive points in a route is assumed to be
-        fifteen seconds.
+        fifteen seconds. The data is sorted in ascending order by the route's start timestamp.
 
         Parameters
         ----------
@@ -73,6 +73,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy().apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
+        data_frame = data_frame.sort_values(by=['trip_time_start_utc'])
         data_frame["timestamps"] = data_frame.copy().apply(
             lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1)
 
