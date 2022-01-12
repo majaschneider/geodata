@@ -238,3 +238,19 @@ class Route(list):
         for point in self:
             route_copy.append(point.deep_copy())
         return route_copy
+
+    def get_timestamps(self):
+        """
+        Returns the timestamps of the route points as a list, if the route has timestamps.
+
+        Returns
+        -------
+        timestamps : List
+            The timestamps of the route points as a list or None if the route points have no timestamps.
+        """
+        timestamps = None
+        if self.has_timestamps():
+            timestamps = []
+            for point in self:
+                timestamps.append(point.timestamp)
+        return timestamps
