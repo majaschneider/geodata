@@ -23,7 +23,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
     def __init__(self, data_frame, scale=False, location_bounds=None):
         """
         Initializes the dataset based on a pandas.DataFrame. Time between successive points in a route is assumed to be
-        fifteen seconds.
+        fifteen seconds. The data is sorted in ascending order by the route's start timestamp.
 
         Parameters
         ----------
@@ -59,19 +59,27 @@ class TaxiServiceTrajectoryDataset(Dataset):
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
         """
+        self.scale = scale
+        self.time_between_route_points = pd.Timedelta(seconds=15)
+
         data_frame["route"] = data_frame["POLYLINE"].copy().apply(self.route_str_to_list)
         # taxi data is provided in format lonlat and degrees, geodata.route.Route requires lonlat and radians
         data_frame["route"] = data_frame["route"].copy().apply(degrees_to_radians)
 
         # remove all rows that have caused polyline parsing issues
         data_frame.drop(data_frame.loc[data_frame["POLYLINE"] == "[]"].index, inplace=True)
+
+        # add timestamp information for route and start
         data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy().apply(
             lambda x: datetime.datetime.utcfromtimestamp(int(x))
         )
+        data_frame = data_frame.sort_values(by=['trip_time_start_utc'])
+        data_frame["timestamps"] = data_frame.copy().apply(
+            lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1
+        )
+
         self.data_frame = data_frame
         self.max_route_len = self.__max_route_len__()
-        self.scale = scale
-        self.time_between_route_points = 15  # seconds
 
         if location_bounds is None:
             self.location_bounds = self.calculate_location_bounds(data_frame)
@@ -96,12 +104,14 @@ class TaxiServiceTrajectoryDataset(Dataset):
         Returns
         -------
         sample : dict
-            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route' and 'route_scaled_padded'.
+            A data sample containing 'day_of_week', 'quarter_hour_of_day', 'month', 'route', 'route_with_timestamps' and
+            'route_scaled_padded'.
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
         timestamp_utc = self.data_frame.trip_time_start_utc.iloc[idx]
+        timestamps = self.data_frame.timestamps.iloc[idx]
         route = Route(self.data_frame.route.iloc[idx])
         route_tensor_raw = torch.tensor(route, dtype=torch.float64, requires_grad=True)
         route_len = len(route)
@@ -123,7 +133,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
             quarter_hour_of_day_one_hot[i] = one_hot(torch.tensor(quarter_hour_of_day), num_classes=96)
             month_one_hot[i] = one_hot(torch.tensor(month), num_classes=12)
             # advance timestamp
-            timestamp_utc += datetime.timedelta(0, self.time_between_route_points)
+            timestamp_utc += self.time_between_route_points
 
         # scale route points by location_bounds
         if self.scale:
@@ -138,16 +148,41 @@ class TaxiServiceTrajectoryDataset(Dataset):
         route_tensor_raw_padded = pad(route_tensor_raw)
         route.pad(self.max_route_len)
         route_tensor_scaled_padded = torch.tensor(route, dtype=torch.float64, requires_grad=True)
+        for _ in range(pad_len):
+            timestamps.append(timestamps[-1])
+        route_with_timestamps = Route(route, timestamps)
 
         sample = {
             "day_of_week": day_of_week_one_hot,
             "quarter_hour_of_day": quarter_hour_of_day_one_hot,
             "month": month_one_hot,
+            "route_with_timestamps": route_with_timestamps,
             "route": route_tensor_raw_padded,
             "route_scaled_padded": route_tensor_scaled_padded,
         }
 
         return sample
+
+    @classmethod
+    def get_timestamps(cls, row, time_between_route_points):
+        """
+        Calculates the timestamp of each route point.
+
+        Parameters
+        ----------
+        row : pd.core.series.Series
+            The data series containing 'route' and 'trip_time_start_utc'.
+        time_between_route_points : pd.Timedelta
+            The time difference between consecutive stops.
+
+        Returns
+        -------
+        List
+            A list of timestamps corresponding to each route point.
+        """
+        route_length = len(row["route"])
+        start_timestamp = row["trip_time_start_utc"]
+        return [start_timestamp + i * time_between_route_points for i in range(route_length)]
 
     @classmethod
     def route_str_to_list(cls, route):
