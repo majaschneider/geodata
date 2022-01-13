@@ -75,7 +75,8 @@ class TaxiServiceTrajectoryDataset(Dataset):
         )
         data_frame = data_frame.sort_values(by=['trip_time_start_utc'])
         data_frame["timestamps"] = data_frame.copy().apply(
-            lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1)
+            lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1
+        )
 
         self.data_frame = data_frame
         self.max_route_len = self.__max_route_len__()
