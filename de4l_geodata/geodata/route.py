@@ -254,3 +254,23 @@ class Route(list):
             for point in self:
                 timestamps.append(point.timestamp)
         return timestamps
+
+    def delete_point_at_(self, idx):
+        """
+        Removes point at position idx from this route. The method modifies this route instantly.
+
+        Parameters
+        ----------
+        idx : int
+            The index of the point to remove from this list.
+
+        Returns
+        -------
+        Route
+            This route without item at position idx.
+        """
+        if len(self) > 0 and len(self) > idx:
+            self.__delitem__(idx)
+        else:
+            raise KeyError("idx is not valid. The route contains" + str(len(self)) + "points.")
+        return self

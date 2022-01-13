@@ -129,6 +129,17 @@ class TestPointMethods(unittest.TestCase):
         coordinates_list_radians = [[math.radians(-8), math.radians(41)], [math.radians(-8), math.radians(41)]]
         self.assertEqual(coordinates_list_radians, degrees_to_radians(coordinates_list_degrees))
 
+    def test_delete_item_(self):
+        route = Route([[0, 0], [1, 1]]).delete_point_at_(1)
+
+        self.assertEqual(Route([[0, 0]]), route)
+        self.assertEqual(Route, type(route))
+        with self.assertRaises(KeyError):
+            route.delete_point_at_(2)
+
+        route_with_timestamps = Route([PointT([0, 0], Timestamp(0)), PointT([1, 1], Timestamp(1))])
+        self.assertTrue(route_with_timestamps.delete_point_at_(1).has_timestamps())
+
 
 if __name__ == "__main__":
     unittest.main()
