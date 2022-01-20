@@ -15,9 +15,9 @@ def get_bearing(point_a, point_b):
     Parameters
     ----------
     point_a : Point
-        The start point in 'latlon' format.
+        The start point in 'latlon' format and 'radians' unit.
     point_b : Point
-        The endpoint in 'latlon' format.
+        The endpoint in 'latlon' format and 'radians' unit.
     Returns
     -------
     bearing : float
@@ -26,6 +26,8 @@ def get_bearing(point_a, point_b):
     """
     if point_a.get_geo_reference_system() != 'latlon' or point_b.get_geo_reference_system() != 'latlon':
         raise ValueError("Both points need to be in 'latlon' format.")
+    point_a = point_a.to_radians(ignore_warning=True)
+    point_b = point_b.to_radians(ignore_warning=True)
     lon1, lat1 = point_a
     lon2, lat2 = point_b
     bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2),
@@ -54,8 +56,9 @@ def get_distance(point_a, point_b):
     if geo_ref_a != geo_ref_b:
         raise ValueError("Both points need to have the same geo_reference_system.")
     if geo_ref_a == 'latlon':
-        distance = hs.haversine([math.degrees(point_a.y_lat), math.degrees(point_a.x_lon)],
-                                [math.degrees(point_b.y_lat), math.degrees(point_b.x_lon)], hs.Unit.METERS)
+        point_a = point_a.to_degrees(ignore_warning=True)
+        point_b = point_b.to_degrees(ignore_warning=True)
+        distance = hs.haversine([point_a.y_lat, point_a.x_lon], [point_b.y_lat, point_b.x_lon], hs.Unit.METERS)
     else:   # distance in cartesian plane
         distance = math.sqrt(math.pow(point_b.x_lon - point_a.x_lon, 2) + math.pow(point_b.y_lat - point_a.y_lat, 2))
     return distance
@@ -79,42 +82,28 @@ def get_interpolated_point(start_point, end_point, ratio):
     Returns
     -------
     interpolated_point : Point
-        The interpolated point.
+        The interpolated point with coordinates in the same unit as those of the start point.
     """
     geo_ref = start_point.get_geo_reference_system()
     if geo_ref == 'latlon':
+        coordinates_unit = start_point.get_coordinates_unit()
+        # calculate interpolation with radians unit coordinates
+        start_point = start_point.to_radians(ignore_warning=True)
         interpolated_point = Point(start_point, geo_reference_system=geo_ref)
         interpolated_point.add_vector_(ratio * get_distance(start_point, end_point), get_bearing(start_point, end_point))
+        # convert back to 'degrees' only if start point's coordinates unit was 'degrees'
+        if coordinates_unit == 'degrees':
+            interpolated_point.to_degrees_()
     else:
         raise NotImplementedError("Interpolating in the cartesian plane is not available.")
     return interpolated_point
-
-
-def degrees_to_radians(coordinates):
-    """
-    Returns a copy of coordinates converted to radians. Assumes that coordinates are in degrees.
-
-    Parameters
-    ----------
-    coordinates : list
-        The coordinates pair in 'latlon' and degree format that is to be transformed.
-
-    Returns
-    -------
-    transformed_coordinates : list
-        The coordinates transformed into degrees.
-    """
-    transformed_coordinates = list(coordinates)
-    for i in range(2):
-        transformed_coordinates[i] = math.radians(transformed_coordinates[i])
-    return transformed_coordinates
 
 
 class Point(list):
     """A point specifying a geographical location.
     """
 
-    def __init__(self, coordinates, geo_reference_system="latlon"):
+    def __init__(self, coordinates, geo_reference_system="latlon", coordinates_unit="radians"):
         """
         Creates a new Point object.
 
@@ -127,10 +116,14 @@ class Point(list):
             Geographical reference system of the coordinates:
             - 'latlon': latitude and longitude coordinates on earth
             - 'cartesian': uses Euclidean space
+        coordinates_unit : {'radians', 'degrees'}
+            The coordinates unit of this point.
         """
         super().__init__(coordinates)
         self.__geo_reference_system = None
         self.set_geo_reference_system(geo_reference_system)
+        self.__coordinates_unit = None
+        self.set_coordinates_unit(coordinates_unit)
         self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
@@ -214,6 +207,110 @@ class Point(list):
             The geographical reference system of this point.
         """
         return self.__geo_reference_system
+
+    def to_degrees_(self, ignore_warning=False):
+        """
+        Converts the coordinates of this point into degrees unit, if the unit is 'radians' and the geo_reference_system
+        is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes are made.
+
+        Parameters
+        ----------
+        ignore_warning : bool
+            If True, no warning will be thrown in case the point's coordinates unit is already 'degrees'.
+        """
+        if self.get_geo_reference_system() != 'latlon':
+            raise ValueError("The coordinates can only be converted if the geo reference system is 'latlon.")
+        if self.get_coordinates_unit() == 'degrees':
+            if not ignore_warning:
+                warnings.warn("Coordinates unit is already 'degrees'.")
+        else:
+            self.set_x_lon(math.degrees(self.x_lon))
+            self.set_y_lat(math.degrees(self.y_lat))
+            self.set_coordinates_unit('degrees')
+
+    def to_degrees(self, ignore_warning=False):
+        """
+        Returns a copy of this point with the coordinates changed into degrees unit, if the unit is 'radians' and the
+        geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Parameters
+        ----------
+        ignore_warning : bool
+            If True, no warning will be thrown in case the point's coordinates unit is already 'degrees'.
+
+        Returns
+        -------
+        Point
+            A copy of this point where the coordinates have been converted into 'degrees' if the unit is 'radians' and
+            the geo_reference_system is 'latlon'.
+        """
+        point_copy = self.deep_copy()
+        point_copy.to_degrees_(ignore_warning)
+        return point_copy
+
+    def to_radians_(self, ignore_warning=False):
+        """
+        Converts the coordinates of this point into radians unit, if the unit is 'degrees' and the geo_reference_system
+        is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes are made.
+
+        Parameters
+        ----------
+        ignore_warning : bool
+            If True, no warning will be thrown in case the point's coordinates unit is already 'radians'.
+        """
+        if self.get_geo_reference_system() != 'latlon':
+            raise ValueError("The coordinates can only be converted if the geo reference system is 'latlon.")
+        if self.get_coordinates_unit() == 'radians':
+            if not ignore_warning:
+                warnings.warn("Coordinates unit is already 'radians'.")
+        else:
+            self.set_x_lon(math.radians(self.x_lon))
+            self.set_y_lat(math.radians(self.y_lat))
+            self.set_coordinates_unit('radians')
+
+    def to_radians(self, ignore_warning=False):
+        """
+        Returns a copy of this point with the coordinates changed into radians unit, if the unit is 'degrees' and the
+        geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Parameters
+        ----------
+        ignore_warning : bool
+            If True, no warning will be thrown in case the point's coordinates unit is already 'degrees'.
+
+        Returns
+        -------
+        Point
+            A copy of this point where the coordinates have been converted into 'radians' if the unit is 'degrees' and
+            the geo_reference_system is 'latlon'.
+        """
+        point_copy = self.deep_copy()
+        point_copy.to_radians_(ignore_warning)
+        return point_copy
+
+    def set_coordinates_unit(self, value):
+        """
+        Sets the value of __coordinates_unit.
+
+        Parameters
+        ----------
+        value : {'radians', 'degrees'}
+            The unit of this point's coordinates if their geo reference system is 'latlon'.
+        """
+        if value not in ("radians", "degrees"):
+            raise ValueError("Coordinates unit can only be 'radians' or 'degrees'.")
+        self.__coordinates_unit = value
+
+    def get_coordinates_unit(self):
+        """
+        Returns the unit that this point's coordinates are in if the geo_reference_system is 'latlon'.
+
+        Returns
+        -------
+        __coordinates_unit
+            The unit of this point's coordinates if their geo_reference_system is 'latlon'.
+        """
+        return self.__coordinates_unit
 
     def add_vector_(self, distance, angle):
         """
@@ -331,4 +428,4 @@ class Point(list):
         Point
             A deep copy of this point.
         """
-        return Point(self, geo_reference_system=self.__geo_reference_system)
+        return Point(self, geo_reference_system=self.__geo_reference_system, coordinates_unit=self.__coordinates_unit)
