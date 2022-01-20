@@ -2,28 +2,8 @@
 """
 
 import torch
-import de4l_geodata.geodata.point as pt
 from de4l_geodata.geodata.point import Point
 from de4l_geodata.geodata.point_t import PointT
-
-
-def degrees_to_radians(coordinate_list):
-    """
-    Returns a copy of coordinate_list converted to radians. Assumes that coordinate_list is a list of coordinates, that
-    are in degrees.
-
-    Parameters
-    ----------
-    coordinate_list : list
-        The coordinate list, with coordinates itself as list in 'latlon' and degree format, that is to be transformed.
-
-    Returns
-    -------
-    transformed_coordinates_list : list
-        The coordinate_list with each pair of coordinates transformed into degrees.
-    """
-    transformed_coordinate_list = [pt.degrees_to_radians(coordinates) for coordinates in coordinate_list]
-    return transformed_coordinate_list
 
 
 class Route(list):
@@ -47,7 +27,18 @@ class Route(list):
                     has_timestamps = False
         return has_timestamps
 
-    def __init__(self, route=None, timestamps=None):
+    def get_coordinates_unit(self):
+        default_coordinates_unit = Point([0, 0]).get_coordinates_unit()
+        if len(self) > 0:
+            coordinates_unit = self[0].get_coordinates_unit()
+            for point in self:
+                if point.get_coordinates_unit() != coordinates_unit:
+                    raise Exception("Not all points of route have the same coordinates unit.")
+            return coordinates_unit
+        else:
+            return default_coordinates_unit
+
+    def __init__(self, route=None, timestamps=None, coordinates_unit='radians'):
         """
         Creates a new Route object.
 
@@ -57,6 +48,8 @@ class Route(list):
             The route, that this route should be initialized with.
         timestamps : List, optional
             The list of timestamps of each route point.
+        coordinates_unit : {'radians', 'degrees'}
+            The coordinates unit of the route's points.
         """
         # initialize with empty list
         super().__init__()
@@ -72,9 +65,9 @@ class Route(list):
             # make sure list items are of type Point
             for idx, point in enumerate(route):
                 if timestamps is not None:
-                    self.__setitem__(idx, PointT(point, timestamps[idx]))
+                    self.__setitem__(idx, PointT(point, timestamps[idx], coordinates_unit=coordinates_unit))
                 elif not isinstance(point, Point):
-                    self.__setitem__(idx, Point(point))
+                    self.__setitem__(idx, Point(point, coordinates_unit=coordinates_unit))
 
             if self.has_timestamps():
                 self.sort_by_time()
@@ -274,3 +267,51 @@ class Route(list):
         else:
             raise KeyError("idx is not valid. The route contains" + str(len(self)) + "points.")
         return self
+
+    def to_radians_(self):
+        """
+        Converts the coordinates of this route's points into radians unit, if their unit is 'degrees' and the
+        geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes
+        are made.
+        """
+        for point in self:
+            point.to_radians_()
+
+    def to_radians(self):
+        """
+        Returns a copy of this route with the coordinates changed into radians unit, if the unit is 'degrees' and the
+        geo_reference_system of its points is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Returns
+        -------
+        Route
+            A copy of this route where the coordinates have been converted into 'radians' if the unit is 'degrees' and
+            the geo_reference_system of its points is 'latlon'.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_radians_()
+        return route_copy
+
+    def to_degrees_(self):
+        """
+        Converts the coordinates of this route's points into degrees unit, if their unit is 'radians' and the
+        geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes
+        are made.
+        """
+        for point in self:
+            point.to_degrees_()
+
+    def to_degrees(self):
+        """
+        Returns a copy of this route with the coordinates changed into degrees unit, if the unit is 'radians' and the
+        geo_reference_system of its points is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Returns
+        -------
+        Route
+            A copy of this route where the coordinates have been converted into 'degrees' if the unit is 'radians' and
+            the geo_reference_system of its points is 'latlon'.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_degrees_()
+        return route_copy

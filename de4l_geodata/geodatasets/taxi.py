@@ -12,7 +12,7 @@ import pandas as pd
 from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
-from de4l_geodata.geodata.route import Route, degrees_to_radians
+from de4l_geodata.geodata.route import Route
 
 
 class TaxiServiceTrajectoryDataset(Dataset):
@@ -64,7 +64,8 @@ class TaxiServiceTrajectoryDataset(Dataset):
 
         data_frame["route"] = data_frame["POLYLINE"].copy().apply(self.route_str_to_list)
         # taxi data is provided in format lonlat and degrees, geodata.route.Route requires lonlat and radians
-        data_frame["route"] = data_frame["route"].copy().apply(degrees_to_radians)
+        data_frame["route"] = data_frame["route"].copy().apply(
+            lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
 
         # remove all rows that have caused polyline parsing issues
         data_frame.drop(data_frame.loc[data_frame["POLYLINE"] == "[]"].index, inplace=True)

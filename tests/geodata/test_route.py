@@ -5,7 +5,7 @@ import math
 import torch
 from pandas import Timestamp
 
-from de4l_geodata.geodata.route import Route, degrees_to_radians
+from de4l_geodata.geodata.route import Route
 from de4l_geodata.geodata.point import Point
 from de4l_geodata.geodata.point_t import PointT
 
@@ -124,11 +124,6 @@ class TestPointMethods(unittest.TestCase):
             self.assertEqual(0, route[0].x_lon)
             self.assertEqual('latlon', route[0].get_geo_reference_system())
 
-    def test_degrees_to_radians(self):
-        coordinates_list_degrees = [[-8, 41], [-8, 41]]
-        coordinates_list_radians = [[math.radians(-8), math.radians(41)], [math.radians(-8), math.radians(41)]]
-        self.assertEqual(coordinates_list_radians, degrees_to_radians(coordinates_list_degrees))
-
     def test_delete_item_(self):
         route = Route([[0, 0], [1, 1]]).delete_point_at_(1)
 
@@ -139,6 +134,37 @@ class TestPointMethods(unittest.TestCase):
 
         route_with_timestamps = Route([PointT([0, 0], Timestamp(0)), PointT([1, 1], Timestamp(1))])
         self.assertTrue(route_with_timestamps.delete_point_at_(1).has_timestamps())
+
+    def test_conversion_between_degrees_and_radians(self):
+        # route copies are successfully changed
+        route_degrees = Route([Point([-8, 41], coordinates_unit='degrees'),
+                               Point([-8.1, 41.1], coordinates_unit='degrees')])
+        route_radians = Route([Point([math.radians(-8), math.radians(41)]),
+                               Point([math.radians(-8.1), math.radians(41.1)])])
+        self.assertEqual(route_radians, route_degrees.to_radians())
+        self.assertEqual(route_degrees, route_radians.to_degrees())
+
+        # routes are modified instantly
+        route = route_radians.deep_copy()
+        route.to_degrees_()
+        self.assertEqual(route_degrees, route)
+
+        route = route_degrees.deep_copy()
+        route.to_radians_()
+        self.assertEqual(route_radians, route)
+
+    def test_get_coordinates_unit(self):
+        point_degrees_1 = Point([-8, 41], coordinates_unit='degrees')
+        point_degrees_2 = Point([-8.1, 41.1], coordinates_unit='degrees')
+        point_radians_1 = Point([math.radians(-8), math.radians(41)])
+        point_radians_2 = Point([math.radians(-8.1), math.radians(41.1)])
+        route_degrees = Route([point_degrees_1, point_degrees_2])
+        route_radians = Route([point_radians_1, point_radians_2])
+        invalid_route = Route([point_radians_1, point_degrees_1])
+        self.assertEqual('radians', route_radians.get_coordinates_unit())
+        self.assertEqual('degrees', route_degrees.get_coordinates_unit())
+        with self.assertRaises(Exception):
+            invalid_route.get_coordinates_unit()
 
 
 if __name__ == "__main__":

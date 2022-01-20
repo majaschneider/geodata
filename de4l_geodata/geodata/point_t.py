@@ -35,7 +35,7 @@ class PointT(Point):
     """A point specifying a geographical location and a timestamp.
     """
 
-    def __init__(self, coordinates, timestamp, geo_reference_system="latlon"):
+    def __init__(self, coordinates, timestamp, geo_reference_system="latlon", coordinates_unit='radians'):
         """
         Creates a new PointT object.
 
@@ -50,8 +50,10 @@ class PointT(Point):
             Geographical reference system of the coordinates:
             - 'latlon': latitude and longitude coordinates on earth
             - 'cartesian': uses Euclidean space
+        coordinates_unit : {'radians', 'degrees'}
+            The coordinates unit of this point.
         """
-        super().__init__(coordinates, geo_reference_system)
+        super().__init__(coordinates, geo_reference_system, coordinates_unit)
         if isinstance(timestamp, pandas.Timestamp):
             self.timestamp = timestamp
         else:

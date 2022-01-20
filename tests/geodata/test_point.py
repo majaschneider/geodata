@@ -1,7 +1,7 @@
 import unittest
 import math
 
-from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point, degrees_to_radians
+from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
 from de4l_geodata.helper.helper import get_digits
 
 
@@ -18,6 +18,9 @@ class TestPointMethods(unittest.TestCase):
         self.end_point = Point([lon_end, lat_end])
         self.angle = math.radians(96.021667)  # 096°01′18″
         self.distance = 124_801  # meters
+        self.point_radians = Point([lon_start, self.lat_start], coordinates_unit='radians')
+        self.point_degrees = Point([math.degrees(lon_start), math.degrees(self.lat_start)], coordinates_unit='degrees')
+        self.accuracy = 10
 
     def test_constructor(self):
         with self.assertRaises(TypeError):
@@ -117,7 +120,7 @@ class TestPointMethods(unittest.TestCase):
         point_b = Point([1, 1], 'cartesian').to_latlon()
         # expected angle between point A and B is 45 degrees
         expected_bearing = math.radians(45)
-        self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b))
+        self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b), places=4)
         # test bearing on Earth
         self.assertAlmostEqual(self.angle, get_bearing(self.start_point, self.end_point), places=3)
 
@@ -129,13 +132,15 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(math.sqrt(2), get_distance(point_a, point_b))
         # test distance on Earth
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, self.end_point), delta=1)
+        end_point_degrees = self.end_point.to_degrees()
+        self.assertAlmostEqual(self.distance, get_distance(self.start_point, end_point_degrees), delta=1)
 
     def test_get_interpolated_point(self):
         ratio = 0.5
         # test interpolation on Earth
         interpolated_point = get_interpolated_point(self.start_point, self.end_point, ratio)
         self.assertAlmostEqual(get_bearing(self.start_point, self.end_point),
-                               get_bearing(self.start_point, interpolated_point))
+                               get_bearing(self.start_point, interpolated_point), places=4)
 
     def test_point_copy(self):
         point = Point([0, 0], geo_reference_system='cartesian')
@@ -149,10 +154,83 @@ class TestPointMethods(unittest.TestCase):
         # the original point object is not changed
         self.assertEqual(point, point_list[0])
 
-    def test_degrees_to_radians(self):
-        coordinates_degrees = [-8, 41]
-        coordinates_radians = [math.radians(-8), math.radians(41)]
-        self.assertEqual(coordinates_radians, degrees_to_radians(coordinates_degrees))
+    def test_to_radians(self):
+        point_radians = self.point_radians.deep_copy()
+        point_degrees = self.point_degrees.deep_copy()
+        # successfully converts between degrees and radians and changes the coordinates_unit
+        point = point_degrees.deep_copy()
+        self.assertAlmostEqual(point_radians.x_lon, point.to_radians().x_lon, places=self.accuracy)
+        self.assertAlmostEqual(point_radians.y_lat, point.to_radians().y_lat, places=self.accuracy)
+        self.assertEqual('radians', point_degrees.to_radians().get_coordinates_unit())
+        # point is not modified
+        self.assertEqual(point_degrees.x_lon, point.x_lon)
+
+        # cannot convert into degrees if geo reference system is not 'latlon'
+        with self.assertRaises(ValueError):
+            point_radians.to_cartesian().to_radians()
+
+        # if already in radians, throws a warning and does not change the point coordinates
+        with self.assertWarns(Warning):
+            point = point_radians.to_radians()
+            self.assertEqual(point_radians.x_lon, point.x_lon)
+
+    def test_to_radians_(self):
+        point_radians = self.point_radians.deep_copy()
+        point_degrees = self.point_degrees.deep_copy()
+
+        # successfully converts between degrees and radians and changes the coordinates_unit while point is modified
+        point = point_degrees.deep_copy()
+        point.to_radians_()
+        self.assertAlmostEqual(point_radians.x_lon, point.x_lon, places=self.accuracy)
+        self.assertAlmostEqual(point_radians.y_lat, point.y_lat, places=self.accuracy)
+        self.assertEqual('radians', point.get_coordinates_unit())
+
+        # cannot convert into degrees if geo reference system is not 'latlon'
+        with self.assertRaises(ValueError):
+            point_degrees.to_cartesian().to_radians_()
+
+        # if already in radians, throws a warning and does not change the point coordinates
+        with self.assertWarns(Warning):
+            point_radians.deep_copy().to_radians_()
+
+    def test_to_degrees(self):
+        point_radians = self.point_radians.deep_copy()
+        point_degrees = self.point_degrees.deep_copy()
+        point = point_radians.deep_copy()
+
+        # successfully converts between degrees and radians and changes the coordinates_unit
+        self.assertAlmostEqual(point_degrees.x_lon, point_radians.to_degrees().x_lon, places=self.accuracy)
+        self.assertAlmostEqual(point_degrees.y_lat, point_radians.to_degrees().y_lat, places=self.accuracy)
+        self.assertEqual('degrees', point_radians.to_degrees().get_coordinates_unit())
+        # point is not modified
+        self.assertEqual(point_radians.x_lon, point.x_lon)
+
+        # cannot convert into degrees if geo reference system is not 'latlon'
+        with self.assertRaises(ValueError):
+            point_radians.to_cartesian().to_degrees()
+
+        # if already in radians, throws a warning and does not change the point coordinates
+        with self.assertWarns(Warning):
+            point_degrees.to_degrees()
+
+    def test_to_degrees_(self):
+        point_radians = self.point_radians.deep_copy()
+        point_degrees = self.point_degrees.deep_copy()
+
+        # successfully converts between degrees and radians and changes the coordinates_unit while point is modified
+        point = point_radians.deep_copy()
+        point.to_degrees_()
+        self.assertAlmostEqual(point_degrees.x_lon, point.x_lon, places=self.accuracy)
+        self.assertAlmostEqual(point_degrees.y_lat, point.y_lat, places=self.accuracy)
+        self.assertEqual('degrees', point.get_coordinates_unit())
+
+        # cannot convert into degrees if geo reference system is not 'latlon'
+        with self.assertRaises(ValueError):
+            point_radians.to_cartesian().to_degrees_()
+
+        # if already in degrees, throws a warning and does not change the point coordinates
+        with self.assertWarns(Warning):
+            point_degrees.deep_copy().to_degrees_()
 
 
 if __name__ == "__main__":
