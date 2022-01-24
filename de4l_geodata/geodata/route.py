@@ -2,7 +2,7 @@
 """
 
 import torch
-from de4l_geodata.geodata.point import Point
+from de4l_geodata.geodata.point import Point, get_distance
 from de4l_geodata.geodata.point_t import PointT
 
 
@@ -315,3 +315,27 @@ class Route(list):
         route_copy = self.deep_copy()
         route_copy.to_degrees_()
         return route_copy
+
+    def max_speed(self, time_between_route_points):
+        """
+        Returns the maximum speed in kilometers per hour of the taxi when driving this route, assuming that the time
+        between consecutive route points is fixed to the indicated value.
+
+        Parameters
+        ----------
+        time_between_route_points : pd.Timedelta
+            The time between consecutive route points.
+
+        Returns
+        -------
+        maximum_speed_kmh : float
+            The maximum speed of the taxi in kilometers per hour, when driving the route.
+        """
+        maximum_speed_kmh = 0
+        for i in range(len(self) - 1):
+            distance = get_distance(self[i], self[i + 1])
+            current_speed_ms = distance / time_between_route_points.total_seconds()
+            current_speed_kmh = current_speed_ms * 3_600 / 1_000
+            if current_speed_kmh > maximum_speed_kmh:
+                maximum_speed_kmh = current_speed_kmh
+        return maximum_speed_kmh

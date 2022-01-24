@@ -4,6 +4,7 @@ import torch
 import pandas as pd
 from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset
 from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.point import Point, get_distance
 
 
 class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
@@ -60,3 +61,13 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
 
         # test wrong path by slicing the first character off
         self.assertRaises(FileNotFoundError, lambda: TaxiServiceTrajectoryDataset.create_from_csv(path[1:]))
+
+    def test_max_speed(self):
+        file_path = "tests/resources/test-taxi-dataset.csv"
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        max_allowed_speed_kmh = 30
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True, max_allowed_speed_kmh=max_allowed_speed_kmh)
+        time_between_route_points = dataset.time_between_route_points
+        for idx, row in dataset.data_frame.iterrows():
+            route = Route(row['route'])
+            self.assertLessEqual(route.max_speed(time_between_route_points), max_allowed_speed_kmh)
