@@ -176,6 +176,33 @@ class TestPointMethods(unittest.TestCase):
         route = Route([point_0, point_1, point_2])
         self.assertAlmostEqual(expected_max_speed_kmh, route.max_speed(time_between_route_points))
 
+    def test_conversion_geo_reference_systems(self):
+        route_cartesian = Route([Point([0, 0], 'cartesian'),
+                                 Point([0, 100], 'cartesian'),
+                                 Point([0, 150], 'cartesian')])
+        route_converted = route_cartesian.to_latlon().to_cartesian()
+        for i in range(len(route_cartesian)):
+            self.assertAlmostEqual(Point(route_cartesian[i]).y_lat, Point(route_converted[i]).y_lat)
+
+        route = route_cartesian.deep_copy()
+        route.to_latlon_()
+        for point in route:
+            self.assertEqual('latlon', point.get_geo_reference_system())
+        route.to_cartesian_()
+        for point in route:
+            self.assertEqual('cartesian', point.get_geo_reference_system())
+
+        # coordinates unit is not changed even though the combination might not make sense
+        route = Route([Point([0, 0], 'cartesian', 'degrees'),
+                       Point([0, 100], 'cartesian', 'degrees'),
+                       Point([0, 150], 'cartesian', 'degrees')])
+        for point in route.to_latlon().to_degrees():
+            self.assertEqual('degrees', point.get_coordinates_unit())
+        route.to_latlon_()
+        route.to_cartesian_()
+        for point in route:
+            self.assertEqual('degrees', point.get_coordinates_unit())
+
 
 if __name__ == "__main__":
     unittest.main()

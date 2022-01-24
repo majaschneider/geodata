@@ -1,5 +1,6 @@
 """Provides a route datatype for lists of points (geo-coordinates) and their manipulation.
 """
+import warnings
 
 import torch
 from de4l_geodata.geodata.point import Point, get_distance
@@ -267,6 +268,46 @@ class Route(list):
         else:
             raise KeyError("idx is not valid. The route contains" + str(len(self)) + "points.")
         return self
+
+    def to_cartesian(self, ignore_warnings=False):
+        """
+        Returns a copy of this route with each point of the route converted from a 'latlon' to a 'cartesian' geo
+        reference system.
+
+        Returns
+        -------
+        route_cartesian : Route
+            A copy of this route with each point in a cartesian geo reference system.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_cartesian_(ignore_warnings)
+        return route_copy
+
+    def to_cartesian_(self, ignore_warnings=False):
+        """Converts each point of this route instantly from a 'latlon' to a 'cartesian' geo reference system.
+        """
+        for point in self:
+            point.to_cartesian_(ignore_warnings)
+
+    def to_latlon(self, ignore_warnings=False):
+        """
+        Returns a copy of this route with each point of the route converted from a 'cartesian' to a 'latlon' geo
+        reference system.
+
+        Returns
+        -------
+        route_cartesian : Route
+            A copy of this route with each point in a latlon geo reference system.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_latlon_(ignore_warnings)
+        return route_copy
+
+    def to_latlon_(self, ignore_warnings=False):
+        """Converts each point of this route instantly from a 'cartesian' to a 'latlon' geo reference system.
+        """
+        for point in self:
+            point.to_latlon_(ignore_warnings)
 
     def to_radians_(self):
         """
