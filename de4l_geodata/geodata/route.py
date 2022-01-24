@@ -1,8 +1,9 @@
 """Provides a route datatype for lists of points (geo-coordinates) and their manipulation.
 """
+import warnings
 
 import torch
-from de4l_geodata.geodata.point import Point
+from de4l_geodata.geodata.point import Point, get_distance
 from de4l_geodata.geodata.point_t import PointT
 
 
@@ -268,6 +269,46 @@ class Route(list):
             raise KeyError("idx is not valid. The route contains" + str(len(self)) + "points.")
         return self
 
+    def to_cartesian(self, ignore_warnings=False):
+        """
+        Returns a copy of this route with each point of the route converted from a 'latlon' to a 'cartesian' geo
+        reference system.
+
+        Returns
+        -------
+        route_cartesian : Route
+            A copy of this route with each point in a cartesian geo reference system.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_cartesian_(ignore_warnings)
+        return route_copy
+
+    def to_cartesian_(self, ignore_warnings=False):
+        """Converts each point of this route instantly from a 'latlon' to a 'cartesian' geo reference system.
+        """
+        for point in self:
+            point.to_cartesian_(ignore_warnings)
+
+    def to_latlon(self, ignore_warnings=False):
+        """
+        Returns a copy of this route with each point of the route converted from a 'cartesian' to a 'latlon' geo
+        reference system.
+
+        Returns
+        -------
+        route_cartesian : Route
+            A copy of this route with each point in a latlon geo reference system.
+        """
+        route_copy = self.deep_copy()
+        route_copy.to_latlon_(ignore_warnings)
+        return route_copy
+
+    def to_latlon_(self, ignore_warnings=False):
+        """Converts each point of this route instantly from a 'cartesian' to a 'latlon' geo reference system.
+        """
+        for point in self:
+            point.to_latlon_(ignore_warnings)
+
     def to_radians_(self):
         """
         Converts the coordinates of this route's points into radians unit, if their unit is 'degrees' and the
@@ -315,3 +356,27 @@ class Route(list):
         route_copy = self.deep_copy()
         route_copy.to_degrees_()
         return route_copy
+
+    def max_speed(self, time_between_route_points):
+        """
+        Returns the maximum speed in kilometers per hour of the taxi when driving this route, assuming that the time
+        between consecutive route points is fixed to the indicated value.
+
+        Parameters
+        ----------
+        time_between_route_points : pd.Timedelta
+            The time between consecutive route points.
+
+        Returns
+        -------
+        maximum_speed_kmh : float
+            The maximum speed of the taxi in kilometers per hour, when driving the route.
+        """
+        maximum_speed_kmh = 0
+        for i in range(len(self) - 1):
+            distance = get_distance(self[i], self[i + 1])
+            current_speed_ms = distance / time_between_route_points.total_seconds()
+            current_speed_kmh = current_speed_ms * 3_600 / 1_000
+            if current_speed_kmh > maximum_speed_kmh:
+                maximum_speed_kmh = current_speed_kmh
+        return maximum_speed_kmh

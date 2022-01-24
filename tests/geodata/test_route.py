@@ -3,10 +3,10 @@ import unittest
 import math
 
 import torch
-from pandas import Timestamp
+from pandas import Timestamp, Timedelta
 
 from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point
+from de4l_geodata.geodata.point import Point, get_distance
 from de4l_geodata.geodata.point_t import PointT
 
 
@@ -165,6 +165,43 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual('degrees', route_degrees.get_coordinates_unit())
         with self.assertRaises(Exception):
             invalid_route.get_coordinates_unit()
+
+    def test_max_speed(self):
+        time_between_route_points = Timedelta(seconds=10)
+        point_0 = Point([0, 0], 'cartesian')
+        point_1 = Point([0, 100], 'cartesian')
+        point_2 = Point([0, 50], 'cartesian')
+        expected_max_speed_kmh = \
+            get_distance(point_0, point_1) * 3_600 / (1_000 * time_between_route_points.total_seconds())
+        route = Route([point_0, point_1, point_2])
+        self.assertAlmostEqual(expected_max_speed_kmh, route.max_speed(time_between_route_points))
+
+    def test_conversion_geo_reference_systems(self):
+        route_cartesian = Route([Point([0, 0], 'cartesian'),
+                                 Point([0, 100], 'cartesian'),
+                                 Point([0, 150], 'cartesian')])
+        route_converted = route_cartesian.to_latlon().to_cartesian()
+        for i in range(len(route_cartesian)):
+            self.assertAlmostEqual(Point(route_cartesian[i]).y_lat, Point(route_converted[i]).y_lat)
+
+        route = route_cartesian.deep_copy()
+        route.to_latlon_()
+        for point in route:
+            self.assertEqual('latlon', point.get_geo_reference_system())
+        route.to_cartesian_()
+        for point in route:
+            self.assertEqual('cartesian', point.get_geo_reference_system())
+
+        # coordinates unit is not changed even though the combination might not make sense
+        route = Route([Point([0, 0], 'cartesian', 'degrees'),
+                       Point([0, 100], 'cartesian', 'degrees'),
+                       Point([0, 150], 'cartesian', 'degrees')])
+        for point in route.to_latlon().to_degrees():
+            self.assertEqual('degrees', point.get_coordinates_unit())
+        route.to_latlon_()
+        route.to_cartesian_()
+        for point in route:
+            self.assertEqual('degrees', point.get_coordinates_unit())
 
 
 if __name__ == "__main__":

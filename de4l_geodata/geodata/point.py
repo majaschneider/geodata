@@ -364,7 +364,7 @@ class Point(list):
         point_copy.add_vector_(distance, angle)
         return point_copy
 
-    def to_cartesian_(self):
+    def to_cartesian_(self, ignore_warnings=False):
         """
         Transforms coordinates of this point from latitude and longitude (both in radian) into cartesian. The point is
         modified instantly.
@@ -375,9 +375,10 @@ class Point(list):
             self.set_y_lat(radius * np.log(np.tan(np.pi / 4.0 + self.y_lat / 2.0)))
             self.set_geo_reference_system("cartesian")
         else:
-            warnings.warn("Geo reference system is already cartesian.")
+            if not ignore_warnings:
+                warnings.warn("Geo reference system is already cartesian.")
 
-    def to_cartesian(self):
+    def to_cartesian(self, ignore_warnings=False):
         """
         Returns a copy of this point with coordinates changed from latitude and longitude (both in radian) into
         cartesian.
@@ -388,10 +389,10 @@ class Point(list):
             A copy of this point with coordinates transformed into cartesian format.
         """
         point_copy = self.deep_copy()
-        point_copy.to_cartesian_()
+        point_copy.to_cartesian_(ignore_warnings)
         return point_copy
 
-    def to_latlon_(self):
+    def to_latlon_(self, ignore_warnings=False):
         """
         Transforms coordinates of this point from cartesian into latitude and longitude (both in radians). The point is
         modified instantly.
@@ -402,10 +403,11 @@ class Point(list):
             self.set_y_lat(np.pi / 2 - 2 * np.arctan(np.exp(-self.y_lat / r)))
             self.set_geo_reference_system("latlon")
         else:
-            warnings.warn("Geo reference system is already latlon.")
+            if not ignore_warnings:
+                warnings.warn("Geo reference system is already latlon.")
         return self
 
-    def to_latlon(self):
+    def to_latlon(self, ignore_warnings=False):
         """
         Returns a copy of this point with coordinates changed from cartesian into latitude and longitude (both in
         radians).
@@ -416,7 +418,7 @@ class Point(list):
             A copy of this point with coordinates transformed into 'latlon' format.
         """
         point_copy = self.deep_copy()
-        point_copy.to_latlon_()
+        point_copy.to_latlon_(ignore_warnings)
         return point_copy
 
     def deep_copy(self):
