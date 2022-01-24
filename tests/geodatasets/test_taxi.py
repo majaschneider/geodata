@@ -40,8 +40,9 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
     def test_calculate_location_bounds(self):
         file_path = "tests/resources/test-taxi-dataset-small.csv"
         data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
-        dataset = TaxiServiceTrajectoryDataset(data_frame)
-        location_bounds = (math.radians(-8.61), math.radians(-8.5), math.radians(41.1), math.radians(41.7))
+        dataset = TaxiServiceTrajectoryDataset(data_frame, max_allowed_speed_kmh=120)
+        location_bounds = (math.radians(-8.610876000000001), math.radians(-8.585676),
+                           math.radians(41.14557), math.radians(41.148638999999996))
         self.assertEqual(location_bounds, dataset.location_bounds)
 
     def test_create_from_csv(self):
@@ -50,8 +51,9 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         correct_path_dataset = TaxiServiceTrajectoryDataset.create_from_csv(path)
         self.assertTrue(isinstance(correct_path_dataset, TaxiServiceTrajectoryDataset))
 
-        correct_path_dataset_small = TaxiServiceTrajectoryDataset.create_from_csv(path, limit=100)
-        self.assertEqual(correct_path_dataset_small.data_frame.shape[0], 100)
+        correct_path_dataset_small = TaxiServiceTrajectoryDataset.create_from_csv(path, limit=100,
+                                                                                  max_allowed_speed_kmh=999)
+        self.assertEqual(100, correct_path_dataset_small.data_frame.shape[0])
 
         # test wrong file type by slicing the last character off
         self.assertRaises(AssertionError, lambda: TaxiServiceTrajectoryDataset.create_from_csv(path[:-1]))

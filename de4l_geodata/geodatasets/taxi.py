@@ -13,6 +13,7 @@ from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
 from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.point import get_distance
 
 
 class TaxiServiceTrajectoryDataset(Dataset):
@@ -20,7 +21,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
     Parses Taxi Service Trajectory dataset.
     """
 
-    def __init__(self, data_frame, scale=False, location_bounds=None):
+    def __init__(self, data_frame, scale=False, location_bounds=None, max_allowed_speed_kmh=120):
         """
         Initializes the dataset based on a pandas.DataFrame. Time between successive points in a route is assumed to be
         fifteen seconds. The data is sorted in ascending order by the route's start timestamp.
@@ -58,34 +59,51 @@ class TaxiServiceTrajectoryDataset(Dataset):
         location_bounds : tuple
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
+        max_allowed_speed_kmh : int
+            The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
+            trip data is assumed to be incomplete and will not be loaded.
         """
         self.scale = scale
         self.time_between_route_points = pd.Timedelta(seconds=15)
 
-        data_frame["route"] = data_frame["POLYLINE"].copy().apply(self.route_str_to_list)
-        # taxi data is provided in format lonlat and degrees, geodata.route.Route requires lonlat and radians
-        data_frame["route"] = data_frame["route"].copy().apply(
-            lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
+        # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
+        data_frame["route"] = data_frame["POLYLINE"].copy()\
+            .apply(self.route_str_to_list)\
+            .apply(lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
 
-        # remove all rows that have caused polyline parsing issues
-        data_frame.drop(data_frame.loc[data_frame["POLYLINE"] == "[]"].index, inplace=True)
+        data_frame['max_speed_kmh'] = data_frame['route'].copy()\
+            .apply(lambda route: self.max_speed(route, self.time_between_route_points))
 
-        # add timestamp information for route and start
-        data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy().apply(
-            lambda x: datetime.datetime.utcfromtimestamp(int(x))
-        )
-        data_frame = data_frame.sort_values(by=['trip_time_start_utc'])
-        data_frame["timestamps"] = data_frame.copy().apply(
-            lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1
-        )
+        # drop data that contains errors
+        for constraint, message in [
+            [data_frame["POLYLINE"] == "[]", "rows dropped because 'POLYLINE' was empty."],
+            [data_frame["max_speed_kmh"] > max_allowed_speed_kmh,
+             f"rows dropped because the maximum allowed speed of {max_allowed_speed_kmh} km/h was violated."]
+        ]:
+            df_to_drop = data_frame.loc[constraint]
+            nr_rows_to_drop = len(df_to_drop)
+            if nr_rows_to_drop > 0:
+                data_frame.drop(df_to_drop.index, inplace=True)
+                print(nr_rows_to_drop, message)
 
-        self.data_frame = data_frame
-        self.max_route_len = self.__max_route_len__()
+        # continue only if there is still data left to import after cleaning operations
+        if len(data_frame) > 0:
+            # add timestamp information for route and start
+            data_frame["trip_time_start_utc"] = data_frame["TIMESTAMP"].copy()\
+                .apply(lambda x: datetime.datetime.utcfromtimestamp(int(x)))
+            data_frame = data_frame.sort_values(by=['trip_time_start_utc'])
+            data_frame["timestamps"] = data_frame.copy()\
+                .apply(lambda row: self.get_timestamps(row, self.time_between_route_points), axis=1)
 
-        if location_bounds is None:
-            self.location_bounds = self.calculate_location_bounds(data_frame)
+            self.data_frame = data_frame
+            self.max_route_len = self.__max_route_len__()
+
+            if location_bounds is None:
+                self.location_bounds = self.calculate_location_bounds(data_frame)
+            else:
+                self.location_bounds = location_bounds
         else:
-            self.location_bounds = location_bounds
+            raise Exception("The provided data does not contain enough valid entries.")
 
     def __len__(self):
         return len(self.data_frame)
@@ -213,6 +231,32 @@ class TaxiServiceTrajectoryDataset(Dataset):
         return transformed
 
     @classmethod
+    def max_speed(cls, route, time_between_route_points):
+        """
+        Returns the maximum speed of the taxi when driving the route, assuming that the time between consecutive route
+        points is fixed to the indicated value.
+
+        Parameters
+        ----------
+        route : Route
+            The route to check for maximum speed.
+        time_between_route_points : pd.Timedelta
+            The time between consecutive route points.
+
+        Returns
+        -------
+        maximum_speed_kmh : float
+            The maximum speed of the taxi in kilometers per hour, when driving the route.
+        """
+        maximum_speed_kmh = 0
+        for i in range(len(route) - 1):
+            current_speed_ms = get_distance(route[i], route[i + 1]) / time_between_route_points.total_seconds()
+            current_speed_kmh = current_speed_ms * 3600 / 1000
+            if current_speed_kmh > maximum_speed_kmh:
+                maximum_speed_kmh = current_speed_kmh
+        return maximum_speed_kmh
+
+    @classmethod
     def calculate_location_bounds(cls, data_frame):
         """
         Determines the minimum and maximum values of the location coordinates from all points in all routes.
@@ -235,7 +279,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         return longitude_min, longitude_max, latitude_min, latitude_max
 
     @classmethod
-    def create_from_csv(cls, path, limit=None):
+    def create_from_csv(cls, path, limit=None, max_allowed_speed_kmh=60):
         """
         Initializes a TaxiServiceTrajectoryDataset by reading from a csv. If size is given, only the first lines are
         read. The csv file should at least have the columns mentioned in TaxiServiceTrajectoryDataset.__init__():
@@ -255,6 +299,9 @@ class TaxiServiceTrajectoryDataset(Dataset):
             Relative path to a csv file containing data required for a TaxiServiceTrajectoryDataset.
         limit : int
             Number of lines from the file that should be read. If None, the whole file while be read.
+        max_allowed_speed_kmh : int
+            The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
+            trip data is assumed to be incomplete and will not be loaded.
 
         Returns
         -------
@@ -271,4 +318,4 @@ class TaxiServiceTrajectoryDataset(Dataset):
         else:
             data_frame = pd.read_csv(path, sep=',', encoding='latin1')
 
-        return TaxiServiceTrajectoryDataset(data_frame)
+        return TaxiServiceTrajectoryDataset(data_frame, max_allowed_speed_kmh=max_allowed_speed_kmh)
