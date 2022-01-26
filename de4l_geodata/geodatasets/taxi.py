@@ -66,6 +66,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         """
         self.scale = scale
         self.time_between_route_points = pd.Timedelta(seconds=15)
+        self.max_allowed_speed_kmh = max_allowed_speed_kmh
 
         # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
         data_frame["route"] = data_frame["POLYLINE"].copy()\
