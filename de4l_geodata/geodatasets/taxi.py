@@ -70,7 +70,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
 
         # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
         data_frame["route"] = data_frame["POLYLINE"].copy()\
-            .apply(self.route_str_to_list)\
+            .apply(lambda polyline: self.route_str_to_list(polyline) if polyline != '[]' else [])\
             .apply(lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
 
         data_frame['max_speed_kmh'] = data_frame['route'].copy()\

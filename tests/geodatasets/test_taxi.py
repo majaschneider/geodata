@@ -75,3 +75,10 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
         dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True, max_allowed_speed_kmh=max_allowed_speed_kmh)
         self.assertEqual(320, len(dataset))
+
+    def test_polyline_error_cleaning(self):
+        # Rows with empty 'Polyline' are dropped
+        file_path = "tests/resources/test-taxi-dataset-big.csv"
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True)
+        self.assertEqual(4984, len(dataset))

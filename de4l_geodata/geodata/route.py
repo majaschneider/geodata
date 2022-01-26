@@ -58,7 +58,7 @@ class Route(list):
             # set list items if any
             super().__init__(route)
             if not isinstance(route, list):
-                raise ValueError("If route is provided, it needs to be of type list.")
+                raise ValueError(f"The provided route is not of type list but {type(route)}: {route}")
             if timestamps is not None:
                 # make sure timestamps are of same length as route
                 if not len(timestamps) == len(route):
