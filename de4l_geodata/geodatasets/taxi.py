@@ -77,7 +77,10 @@ class TaxiServiceTrajectoryDataset(Dataset):
             .apply(lambda route: self.max_speed(route, self.time_between_route_points))
 
         # drop data that contains errors
-        error_constraints = [[data_frame["POLYLINE"] == "[]", "rows dropped because 'POLYLINE' was empty."]]
+        error_constraints = [
+            [data_frame["POLYLINE"] == "[]", "rows dropped because 'POLYLINE' was empty."],
+            [data_frame["MISSING_DATA"], "rows dropped because 'MISSING_DATA' was True."]
+        ]
         if max_allowed_speed_kmh is not None:
             error_constraints.append(
                 [data_frame["max_speed_kmh"] > max_allowed_speed_kmh,
