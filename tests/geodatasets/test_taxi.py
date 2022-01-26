@@ -4,7 +4,6 @@ import torch
 import pandas as pd
 from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset
 from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point, get_distance
 
 
 class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
