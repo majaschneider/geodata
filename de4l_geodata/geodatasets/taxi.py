@@ -21,7 +21,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
     Parses Taxi Service Trajectory dataset.
     """
 
-    def __init__(self, data_frame, scale=False, location_bounds=None, max_allowed_speed_kmh=120):
+    def __init__(self, data_frame, scale=False, location_bounds=None, max_allowed_speed_kmh=None):
         """
         Initializes the dataset based on a pandas.DataFrame. Time between successive points in a route is assumed to be
         fifteen seconds. The data is sorted in ascending order by the route's start timestamp.
@@ -59,27 +59,33 @@ class TaxiServiceTrajectoryDataset(Dataset):
         location_bounds : tuple
             Outer bounds of the location data's coordinates in format (longitude minimum, longitude maximum, latitude
             minimum, latitude maximum). If None, values will be calculated from data_frame.
-        max_allowed_speed_kmh : int
-            The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
-            trip data is assumed to be incomplete and will not be loaded.
+        max_allowed_speed_kmh : int or None
+            The maximum allowed speed in kilometers per hour, that a taxi can go. If a trip contains points that
+            indicate a higher speed, the trip data is assumed to be incomplete and will not be loaded. If None, there
+            is no constraint as to the speed limit.
         """
         self.scale = scale
         self.time_between_route_points = pd.Timedelta(seconds=15)
+        self.max_allowed_speed_kmh = max_allowed_speed_kmh
 
         # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
         data_frame["route"] = data_frame["POLYLINE"].copy()\
-            .apply(self.route_str_to_list)\
+            .apply(lambda polyline: self.route_str_to_list(polyline) if polyline != '[]' else [])\
             .apply(lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
 
         data_frame['max_speed_kmh'] = data_frame['route'].copy()\
             .apply(lambda route: self.max_speed(route, self.time_between_route_points))
 
         # drop data that contains errors
-        for constraint, message in [
+        error_constraints = [
             [data_frame["POLYLINE"] == "[]", "rows dropped because 'POLYLINE' was empty."],
-            [data_frame["max_speed_kmh"] > max_allowed_speed_kmh,
-             f"rows dropped because the maximum allowed speed of {max_allowed_speed_kmh} km/h was violated."]
-        ]:
+            [data_frame["MISSING_DATA"], "rows dropped because 'MISSING_DATA' was True."]
+        ]
+        if max_allowed_speed_kmh is not None:
+            error_constraints.append(
+                [data_frame["max_speed_kmh"] > max_allowed_speed_kmh,
+                 f"rows dropped because the maximum allowed speed of {max_allowed_speed_kmh} km/h was violated."])
+        for constraint, message in error_constraints:
             df_to_drop = data_frame.loc[constraint]
             nr_rows_to_drop = len(df_to_drop)
             if nr_rows_to_drop > 0:

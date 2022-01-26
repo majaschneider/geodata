@@ -4,7 +4,6 @@ import torch
 import pandas as pd
 from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset
 from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point, get_distance
 
 
 class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
@@ -71,3 +70,21 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         for idx, row in dataset.data_frame.iterrows():
             route = Route(row['route'])
             self.assertLessEqual(route.max_speed(time_between_route_points), max_allowed_speed_kmh)
+
+        max_allowed_speed_kmh = None
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True, max_allowed_speed_kmh=max_allowed_speed_kmh)
+        self.assertEqual(320, len(dataset))
+
+    def test_error_cleaning(self):
+        # Rows with empty 'Polyline' are dropped
+        file_path = "tests/resources/test-taxi-dataset-big.csv"
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True)
+        self.assertEqual(4984, len(dataset))
+
+        # Rows where 'Missing_data' is true are dropped
+        file_path = "tests/resources/test-taxi-dataset-missing-data.csv"
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True, max_allowed_speed_kmh=99999)
+        self.assertEqual(98, len(dataset))
