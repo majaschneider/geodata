@@ -71,3 +71,8 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         for idx, row in dataset.data_frame.iterrows():
             route = Route(row['route'])
             self.assertLessEqual(route.max_speed(time_between_route_points), max_allowed_speed_kmh)
+
+        max_allowed_speed_kmh = None
+        data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
+        dataset = TaxiServiceTrajectoryDataset(data_frame, scale=True, max_allowed_speed_kmh=max_allowed_speed_kmh)
+        self.assertEqual(320, len(dataset))
