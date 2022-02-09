@@ -2,6 +2,7 @@ import random
 import unittest
 import math
 
+import pandas as pd
 import torch
 from pandas import Timestamp, Timedelta
 
@@ -54,9 +55,15 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(route, route_from_tensor)
 
     def test_append(self):
-        route = Route()
-        route.append([0, 0])
-        self.assertEqual(Route([[0, 0]]), route)
+        route_default = Route()
+        route_default.append([0, 0])
+        self.assertEqual(Route([[0, 0]]), route_default)
+
+        # timestamp will be lost but point appended
+        with self.assertWarns(Warning):
+            route_default.append(PointT([1, 1], timestamp=pd.Timestamp(0)))
+        self.assertEqual(Route([[0, 0], [1, 1]]), route_default)
+        self.assertFalse(route_default.has_timestamps())
 
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)

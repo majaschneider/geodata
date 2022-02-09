@@ -119,18 +119,27 @@ class Route(list):
 
         Parameters
         ----------
-        value : list
-            The point that is to be appended to this route.
+        value : list or Point
+            The point that is to be appended to this route. If it is in list format, it is converted into a Point object
+            with default geo_reference_system ('latlon') and with the coordinates_unit of this route. If a point with
+            timestamp is appended to a route that has no timestamps, the point is appended but the timestamp will be
+            lost. On the other hand a point without timestamps cannot be appended to a route with timestamps.
 
         Returns
         -------
         Route
             This route which is appended by value.
         """
+        route_has_timestamps = self.has_timestamps()
+        if route_has_timestamps and not isinstance(value, PointT):
+            raise Exception('Cannot append a point without a timestamp to a route that has timestamps.')
         if not isinstance(value, Point):
-            value = Point(value)
+            value = Point(value, coordinates_unit=self.get_coordinates_unit())
+        if not route_has_timestamps and isinstance(value, PointT):
+            warnings.warn('A point with timestamp was added onto a route without timestamps. The point will be appended'
+                          ' but the timestamp is removed.')
         super().append(value)
-        if self.has_timestamps():
+        if route_has_timestamps:
             self.sort_by_time()
         return self
 
