@@ -56,6 +56,7 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(point, point_list[0])
 
         # the copy has the same parameters as the original
+        point_copy = point.deep_copy()
         self.assertEqual(pandas.Timestamp(0), point_copy.timestamp)
         self.assertEqual('cartesian', point_copy.get_geo_reference_system())
         self.assertEqual('degrees', point_copy.get_coordinates_unit())

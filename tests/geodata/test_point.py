@@ -25,21 +25,21 @@ class TestPointMethods(unittest.TestCase):
         self.accuracy = 10
 
     def test_constructor(self):
-        for illegal_argument in [
+        for illegal_argument, error in [
             # disallow empty points
-            None,
-            [],
+            [None, TypeError],
+            [[], IndexError],
             # disallow other list items than lists
-            1,
-            1.0,
-            "1",
+            [1, TypeError],
+            [1.0, TypeError],
+            ["1", IndexError],
             # disallow lists as list items with not exactly two items
-            [1],
-            [1, 2, 3],
+            [[1], IndexError],
+            [[1, 2, 3], ValueError],
             # disallow more than one list item
-            [[1, 1], [2, 2]]
+            [[[1, 1], [2, 2]], TypeError]
         ]:
-            self.assertRaises(TypeError, Point, illegal_argument)
+            self.assertRaises(error, Point, illegal_argument)
         self.assertEqual(Point, type(Point([0, 1])))
 
     def test_append(self):
