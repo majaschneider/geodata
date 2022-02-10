@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "de4l-geodata"
-version = "0.2.3"
+version = "0.3.0"
 description = "A package for working with geolocations"
 repository = "https://git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata"
 authors = ["Maja Schneider","Lukas Gehrke"]
