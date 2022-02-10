@@ -29,17 +29,46 @@ class Route(list):
         return has_timestamps
 
     def get_coordinates_unit(self):
+        """
+        Returns the coordinates_unit of the points of this route. If the units are not the same for all points, raises
+        an exception.
+
+        Returns
+        -------
+        this_routes_coordinates_unit : {'radians', 'degrees'}
+            The coordinates unit of the points of this route.
+        """
         default_coordinates_unit = Point([0, 0]).get_coordinates_unit()
+        this_routes_coordinates_unit = default_coordinates_unit
         if len(self) > 0:
             coordinates_unit = self[0].get_coordinates_unit()
             for point in self:
                 if point.get_coordinates_unit() != coordinates_unit:
                     raise Exception("Not all points of route have the same coordinates unit.")
-            return coordinates_unit
-        else:
-            return default_coordinates_unit
+            this_routes_coordinates_unit = coordinates_unit
+        return this_routes_coordinates_unit
 
-    def __init__(self, route=None, timestamps=None, coordinates_unit='radians'):
+    def get_geo_reference_system(self):
+        """
+        Returns the geo_reference_system of the points of this route. If the geo_reference_system is not the same for
+        all points, raises an exception.
+
+        Returns
+        -------
+        this_routes_geo_reference_system : {'latlon', 'cartesian'}
+            The geo_reference_system of the points of this route.
+        """
+        default_geo_reference_system = Point([0, 0]).get_geo_reference_system()
+        this_routes_geo_reference_system = default_geo_reference_system
+        if len(self) > 0:
+            geo_reference_system = self[0].get_geo_reference_system()
+            for point in self:
+                if point.get_geo_reference_system() != geo_reference_system:
+                    raise Exception("Not all points of route have the same geo reference system.")
+            this_routes_geo_reference_system = geo_reference_system
+        return this_routes_geo_reference_system
+
+    def __init__(self, route=None, timestamps=None, coordinates_unit=None):
         """
         Creates a new Route object.
 
@@ -48,7 +77,8 @@ class Route(list):
         route : list, optional
             The route, that this route should be initialized with.
         timestamps : List, optional
-            The list of timestamps of each route point.
+            The list of timestamps of each route point. If a point with timestamp is provided in route, then this
+            timestamp will be overwritten by the corresponding value in timestamps.
         coordinates_unit : {'radians', 'degrees'}
             The coordinates unit of the route's points.
         """
@@ -65,10 +95,25 @@ class Route(list):
                     raise ValueError("Timestamps and route need to be of same length.")
             # make sure list items are of type Point
             for idx, point in enumerate(route):
-                if timestamps is not None:
-                    self.__setitem__(idx, PointT(point, timestamps[idx], coordinates_unit=coordinates_unit))
-                elif not isinstance(point, Point):
-                    self.__setitem__(idx, Point(point, coordinates_unit=coordinates_unit))
+                if not isinstance(point, Point):
+                    # create Point maybe with timestamp and the proper coordinates unit
+                    if coordinates_unit is None:
+                        coordinates_unit = Point([0, 0]).get_coordinates_unit()
+                    if timestamps is None:
+                        point = Point(point, coordinates_unit=coordinates_unit)
+                    else:
+                        point = PointT(point, timestamp=timestamps[idx], coordinates_unit=coordinates_unit)
+                else:
+                    # if coordinates_unit is given, check if it matches the point's unit
+                    if coordinates_unit is not None and point.get_coordinates_unit() != coordinates_unit:
+                        raise Exception(f"The given coordinates_unit '{coordinates_unit}' does not match the unit of"
+                                        f"the provided points.")
+                    if timestamps is not None:
+                        point = PointT(point, timestamps[idx])
+                self.__setitem__(idx, point)
+            # make sure that provided points do have the same coordinates unit and geo reference system
+            self.get_coordinates_unit()
+            self.get_geo_reference_system()
 
             if self.has_timestamps():
                 self.sort_by_time()
@@ -119,16 +164,39 @@ class Route(list):
 
         Parameters
         ----------
-        value : list
-            The point that is to be appended to this route.
+        value : list or Point
+            The point that is to be appended to this route. If it is in list format, it is converted into a Point object
+            with default geo_reference_system ('latlon') and with the coordinates_unit of this route. If a point with
+            timestamp is appended to a route that has no timestamps, the point is appended but the timestamp will be
+            lost. On the other hand a point without timestamps cannot be appended to a route with timestamps.
 
         Returns
         -------
         Route
             This route which is appended by value.
         """
-        if not isinstance(value, Point):
-            value = Point(value)
+        route_has_timestamps = self.has_timestamps()
+        if len(self) == 0:
+            if not isinstance(value, Point):
+                value = Point(value)
+        else:
+            if route_has_timestamps and not isinstance(value, PointT):
+                raise Exception('Cannot append a point without a timestamp to a route that has timestamps.')
+            if not route_has_timestamps and isinstance(value, PointT):
+                warnings.warn('A point with timestamp was added onto a route without timestamps. The point will be '
+                              'appended but the timestamp is removed.')
+            if not isinstance(value, Point):
+                value = Point(value, coordinates_unit=self.get_coordinates_unit())
+            if isinstance(value, Point) and value.get_geo_reference_system() != self.get_geo_reference_system():
+                raise Exception(f"Point with geo reference system '{value.get_geo_reference_system()}' cannot be "
+                                f"appended to a route with geo reference system '{self.get_geo_reference_system()}'.")
+            if isinstance(value, Point) and value.get_coordinates_unit() != self.get_coordinates_unit():
+                warnings.warn(f'Point had differing coordinates_unit than the route it was to be appended to. The '
+                              f"point was converted to '{self.get_coordinates_unit()}' before appending.")
+                if self.get_coordinates_unit() == 'degrees':
+                    value = value.to_degrees()
+                else:
+                    value = value.to_radians()
         super().append(value)
         if self.has_timestamps():
             self.sort_by_time()

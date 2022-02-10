@@ -1,6 +1,8 @@
 import unittest
 import math
 
+import numpy as np
+
 from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
 from de4l_geodata.helper.helper import get_digits
 
@@ -23,19 +25,21 @@ class TestPointMethods(unittest.TestCase):
         self.accuracy = 10
 
     def test_constructor(self):
-        with self.assertRaises(TypeError):
+        for illegal_argument, error in [
             # disallow empty points
-            Point()
-            Point([])
+            [None, TypeError],
+            [[], IndexError],
             # disallow other list items than lists
-            Point(1)
-            Point(1.0)
-            Point("1")
+            [1, TypeError],
+            [1.0, TypeError],
+            ["1", IndexError],
             # disallow lists as list items with not exactly two items
-            Point([1])
-            Point([1, 2, 3])
+            [[1], IndexError],
+            [[1, 2, 3], ValueError],
             # disallow more than one list item
-            Point([[1, 1], [2, 2]])
+            [[[1, 1], [2, 2]], TypeError]
+        ]:
+            self.assertRaises(error, Point, illegal_argument)
         self.assertEqual(Point, type(Point([0, 1])))
 
     def test_append(self):
@@ -59,8 +63,7 @@ class TestPointMethods(unittest.TestCase):
 
     def test_set_geo_reference_system(self):
         point = Point([0, 0])
-        with self.assertRaises(ValueError):
-            point.set_geo_reference_system("invalid_value")
+        self.assertRaises(ValueError, point.set_geo_reference_system, 'invalid_value')
         try:
             point.set_geo_reference_system("cartesian")
             self.assertEqual("cartesian", point.get_geo_reference_system())
@@ -123,6 +126,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b), places=4)
         # test bearing on Earth
         self.assertAlmostEqual(self.angle, get_bearing(self.start_point, self.end_point), places=3)
+        # warning is thrown, when points do not have the same coordinates unit
+        self.assertWarns(UserWarning, get_bearing, point_a, point_b.to_degrees())
 
     def test_get_distance(self):
         # test distance in cartesian plane
@@ -134,6 +139,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, self.end_point), delta=1)
         end_point_degrees = self.end_point.to_degrees()
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, end_point_degrees), delta=1)
+        # warning is thrown, when points do not have the same coordinates unit
+        self.assertWarns(UserWarning, get_distance, point_a.to_latlon(), point_b.to_latlon().to_degrees())
 
     def test_get_interpolated_point(self):
         ratio = 0.5
@@ -166,13 +173,13 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(point_degrees.x_lon, point.x_lon)
 
         # cannot convert into degrees if geo reference system is not 'latlon'
-        with self.assertRaises(ValueError):
-            point_radians.to_cartesian().to_radians()
+        point = point_radians.to_cartesian()
+        self.assertRaises((ValueError, Exception), point.to_radians)
 
         # if already in radians, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
             point = point_radians.to_radians()
-            self.assertEqual(point_radians.x_lon, point.x_lon)
+        self.assertEqual(point_radians.x_lon, point.x_lon)
 
     def test_to_radians_(self):
         point_radians = self.point_radians.deep_copy()
@@ -206,8 +213,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(point_radians.x_lon, point.x_lon)
 
         # cannot convert into degrees if geo reference system is not 'latlon'
-        with self.assertRaises(ValueError):
-            point_radians.to_cartesian().to_degrees()
+        point = point_radians.to_cartesian()
+        self.assertRaises((ValueError, Exception), point.to_degrees)
 
         # if already in radians, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
@@ -231,6 +238,24 @@ class TestPointMethods(unittest.TestCase):
         # if already in degrees, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
             point_degrees.deep_copy().to_degrees_()
+
+    def test_is_coordinates_unit_valid(self):
+        for illegal_argument, parameter in [
+            [[np.pi + 0.1, np.pi], 'radians'],
+            [[180.1, 90], 'degrees']
+        ]:
+            self.assertRaises(Exception, Point, illegal_argument, coordinates_unit=parameter)
+
+        for valid_argument, parameter in [
+            [[-180, -90], 'degrees'],
+            [[180, 90], 'degrees'],
+            [[-np.pi, -np.pi], 'radians'],
+            [[np.pi, np.pi], 'radians']
+        ]:
+            try:
+                Point(valid_argument, coordinates_unit=parameter)
+            except Exception:
+                self.fail("Unexpected exception when invoking set_geo_reference_system().")
 
 
 if __name__ == "__main__":

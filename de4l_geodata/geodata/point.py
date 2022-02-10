@@ -26,6 +26,8 @@ def get_bearing(point_a, point_b):
     """
     if point_a.get_geo_reference_system() != 'latlon' or point_b.get_geo_reference_system() != 'latlon':
         raise ValueError("Both points need to be in 'latlon' format.")
+    if point_a.get_coordinates_unit() != point_b.get_coordinates_unit():
+        warnings.warn('Coordinates do not have the same unit and will be converted before calculation.')
     point_a = point_a.to_radians(ignore_warning=True)
     point_b = point_b.to_radians(ignore_warning=True)
     lon1, lat1 = point_a
@@ -55,6 +57,8 @@ def get_distance(point_a, point_b):
     geo_ref_b = point_b.get_geo_reference_system()
     if geo_ref_a != geo_ref_b:
         raise ValueError("Both points need to have the same geo_reference_system.")
+    if point_a.get_coordinates_unit() != point_b.get_coordinates_unit():
+        warnings.warn('Coordinates do not have the same unit and will be converted before calculation.')
     if geo_ref_a == 'latlon':
         point_a = point_a.to_degrees(ignore_warning=True)
         point_b = point_b.to_degrees(ignore_warning=True)
@@ -127,6 +131,9 @@ class Point(list):
         self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
+        if not self.is_coordinates_unit_valid():
+            raise Exception(f"Coordinates are not in the valid value range for coordinates_unit '"
+                            f"{self.get_coordinates_unit()}'.")
         if not (isinstance(coordinates, list) and len(coordinates) == 2):
             raise ValueError("Coordinates need to be a list with two elements.")
         for i in range(2):
@@ -431,3 +438,12 @@ class Point(list):
             A deep copy of this point.
         """
         return Point(self, geo_reference_system=self.__geo_reference_system, coordinates_unit=self.__coordinates_unit)
+
+    def is_coordinates_unit_valid(self):
+        return self.get_geo_reference_system() == 'cartesian' or \
+               (
+                       (self.get_coordinates_unit() == 'degrees' and -180 <= self.x_lon <= 180 and
+                        -90 <= self.y_lat <= 90) or
+                       (self.get_coordinates_unit() == 'radians' and -np.pi <= self.x_lon <= np.pi and
+                        -np.pi <= self.y_lat <= np.pi)
+               )

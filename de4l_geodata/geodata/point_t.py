@@ -68,4 +68,5 @@ class PointT(Point):
         Point
             A deep copy of this point.
         """
-        return PointT(self, timestamp=self.timestamp, geo_reference_system=self.get_geo_reference_system())
+        return PointT(self, timestamp=self.timestamp, geo_reference_system=self.get_geo_reference_system(),
+                      coordinates_unit=self.get_coordinates_unit())

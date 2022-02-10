@@ -22,11 +22,14 @@ class TestPointMethods(unittest.TestCase):
         self.distance = 124_801  # meters
 
     def test_constructor(self):
-        with self.assertRaises(TypeError):
-            PointT([0, 0], timestamp=0)
-            PointT([0, 0], timestamp=0.)
-            PointT([0, 0], timestamp="0")
-            PointT([0, 0], timestamp=datetime.datetime.timestamp(0))
+        for illegal_argument in [
+            0,
+            0.,
+            "0",
+            datetime.datetime.now()
+        ]:
+            self.assertRaises(TypeError, PointT, [0, 0], timestamp=illegal_argument)
+
         try:
             PointT([0, 0], timestamp=pandas.Timestamp(0))
         except Exception:
@@ -39,7 +42,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(self.start_point.timestamp, interpolated_point.timestamp)
 
     def test_point_copy(self):
-        point = PointT([0, 0], timestamp=pandas.Timestamp(0), geo_reference_system='cartesian')
+        point = PointT([0, 0], timestamp=pandas.Timestamp(0), geo_reference_system='cartesian',
+                       coordinates_unit='degrees')
         point_list = [point]
         point_copy = point.deep_copy()
         point_copy.timestamp = pandas.Timestamp(1)
@@ -47,5 +51,12 @@ class TestPointMethods(unittest.TestCase):
         # changing the copy does not change the original point
         self.assertEqual(pandas.Timestamp(0), point.timestamp)
         self.assertEqual('cartesian', point.get_geo_reference_system())
+        self.assertEqual('degrees', point.get_coordinates_unit())
         # the original point object is not changed
         self.assertEqual(point, point_list[0])
+
+        # the copy has the same parameters as the original
+        point_copy = point.deep_copy()
+        self.assertEqual(pandas.Timestamp(0), point_copy.timestamp)
+        self.assertEqual('cartesian', point_copy.get_geo_reference_system())
+        self.assertEqual('degrees', point_copy.get_coordinates_unit())
