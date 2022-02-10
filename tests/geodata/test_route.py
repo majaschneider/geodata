@@ -144,6 +144,11 @@ class TestPointMethods(unittest.TestCase):
             route_degrees.append(point_radians)
         self.assertEqual(Route([point_degrees, point_degrees]), route_degrees)
 
+        # prohibits appending a point with non-matching geo reference system
+        route_latlon = Route([[1, 1], [2, 2]])
+        point_cartesian = Point([3, 3], geo_reference_system='cartesian')
+        self.assertRaises(Exception, route_latlon.append, point_cartesian)
+
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)
         r = Route([[-1, 1]])

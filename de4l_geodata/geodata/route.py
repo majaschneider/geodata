@@ -187,6 +187,9 @@ class Route(list):
                               'appended but the timestamp is removed.')
             if not isinstance(value, Point):
                 value = Point(value, coordinates_unit=self.get_coordinates_unit())
+            if isinstance(value, Point) and value.get_geo_reference_system() != self.get_geo_reference_system():
+                raise Exception(f"Point with geo reference system '{value.get_geo_reference_system()}' cannot be "
+                                f"appended to a route with geo reference system '{self.get_geo_reference_system()}'.")
             if isinstance(value, Point) and value.get_coordinates_unit() != self.get_coordinates_unit():
                 warnings.warn(f'Point had differing coordinates_unit than the route it was to be appended to. The '
                               f"point was converted to '{self.get_coordinates_unit()}' before appending.")
