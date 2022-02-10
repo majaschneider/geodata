@@ -22,11 +22,14 @@ class TestPointMethods(unittest.TestCase):
         self.distance = 124_801  # meters
 
     def test_constructor(self):
-        with self.assertRaises(TypeError):
-            PointT([0, 0], timestamp=0)
-            PointT([0, 0], timestamp=0.)
-            PointT([0, 0], timestamp="0")
-            PointT([0, 0], timestamp=datetime.datetime.timestamp(0))
+        for illegal_argument in [
+            0,
+            0.,
+            "0",
+            datetime.datetime.now()
+        ]:
+            self.assertRaises(TypeError, PointT, [0, 0], timestamp=illegal_argument)
+
         try:
             PointT([0, 0], timestamp=pandas.Timestamp(0))
         except Exception:

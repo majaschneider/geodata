@@ -23,19 +23,21 @@ class TestPointMethods(unittest.TestCase):
         self.accuracy = 10
 
     def test_constructor(self):
-        with self.assertRaises(TypeError):
+        for illegal_argument in [
             # disallow empty points
-            Point()
-            Point([])
+            None,
+            [],
             # disallow other list items than lists
-            Point(1)
-            Point(1.0)
-            Point("1")
+            1,
+            1.0,
+            "1",
             # disallow lists as list items with not exactly two items
-            Point([1])
-            Point([1, 2, 3])
+            [1],
+            [1, 2, 3],
             # disallow more than one list item
-            Point([[1, 1], [2, 2]])
+            [[1, 1], [2, 2]]
+        ]:
+            self.assertRaises(TypeError, Point, illegal_argument)
         self.assertEqual(Point, type(Point([0, 1])))
 
     def test_append(self):
@@ -59,8 +61,7 @@ class TestPointMethods(unittest.TestCase):
 
     def test_set_geo_reference_system(self):
         point = Point([0, 0])
-        with self.assertRaises(ValueError):
-            point.set_geo_reference_system("invalid_value")
+        self.assertRaises(ValueError, point.set_geo_reference_system, 'invalid_value')
         try:
             point.set_geo_reference_system("cartesian")
             self.assertEqual("cartesian", point.get_geo_reference_system())
@@ -172,7 +173,7 @@ class TestPointMethods(unittest.TestCase):
         # if already in radians, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
             point = point_radians.to_radians()
-            self.assertEqual(point_radians.x_lon, point.x_lon)
+        self.assertEqual(point_radians.x_lon, point.x_lon)
 
     def test_to_radians_(self):
         point_radians = self.point_radians.deep_copy()

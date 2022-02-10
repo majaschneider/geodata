@@ -16,18 +16,20 @@ class TestPointMethods(unittest.TestCase):
         self.route_without_timestamps = Route([Point([0, 0])])
         self.route_with_timestamps = Route([PointT([0, 0], timestamp=Timestamp(0))])
 
-    def test_constructor(self):
+    def test_init(self):
         # initializes with empty list
         self.assertEqual(Route([]), Route())
-        with self.assertRaises(TypeError):
+        for illegal_route_argument in [
             # disallow other list items than lists
-            Route(1)
-            Route(1.0)
-            Route("1")
+            1.0,
+            "1",
             # disallow lists as list items that are not of type Point or can be converted into Point
-            Route([[]])
-            Route([[1]])
-            Route([[1, 2, 3]])
+            [[]],
+            [[1]],
+            [[1, 2, 3]]
+        ]:
+            self.assertRaises(TypeError, Route.__init__, illegal_route_argument)
+
         # successfully creates a Route
         self.assertEqual(Route, type(Route([[0, 0]])))
         self.assertEqual(Route, type(Route([[0, 0], [1, 1]])))
