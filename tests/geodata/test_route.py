@@ -65,6 +65,19 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(Route([[0, 0], [1, 1]]), route_default)
         self.assertFalse(route_default.has_timestamps())
 
+        # append a point with differing coordinates_unit
+        route_radians = Route([[0.1, 0.5]])
+        point_degrees = Point([-8, 41], coordinates_unit='degrees')
+        point_radians = point_degrees.to_radians()
+        with self.assertWarns(Warning):
+            route_radians.append(point_degrees)
+        self.assertEqual(Route([[0.1, 0.5], point_radians]), route_radians)
+
+        route_degrees = Route([[-8, 41]], coordinates_unit='degrees')
+        with self.assertWarns(Warning):
+            route_degrees.append(point_radians)
+        self.assertEqual(Route([[-8, 41], point_degrees]), route_degrees)
+
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)
         r = Route([[-1, 1]])

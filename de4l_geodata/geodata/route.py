@@ -138,6 +138,13 @@ class Route(list):
         if not route_has_timestamps and isinstance(value, PointT):
             warnings.warn('A point with timestamp was added onto a route without timestamps. The point will be appended'
                           ' but the timestamp is removed.')
+        if isinstance(value, Point) and value.get_coordinates_unit() != self.get_coordinates_unit():
+            warnings.warn(f'Point had differing coordinates_unit than the route it was to be appended to. The point was'
+                          f' converted to {self.get_coordinates_unit()} before appending.')
+            if self.get_coordinates_unit() == 'degrees':
+                value = value.to_degrees()
+            else:
+                value = value.to_radians()
         super().append(value)
         if route_has_timestamps:
             self.sort_by_time()
