@@ -1,6 +1,8 @@
 import unittest
 import math
 
+import numpy as np
+
 from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
 from de4l_geodata.helper.helper import get_digits
 
@@ -236,6 +238,24 @@ class TestPointMethods(unittest.TestCase):
         # if already in degrees, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
             point_degrees.deep_copy().to_degrees_()
+
+    def test_is_coordinates_unit_valid(self):
+        for illegal_argument, parameter in [
+            [[np.pi + 0.1, np.pi], 'radians'],
+            [[180.1, 90], 'degrees']
+        ]:
+            self.assertRaises(Exception, Point, illegal_argument, coordinates_unit=parameter)
+
+        for valid_argument, parameter in [
+            [[-180, -90], 'degrees'],
+            [[180, 90], 'degrees'],
+            [[-np.pi, -np.pi], 'radians'],
+            [[np.pi, np.pi], 'radians']
+        ]:
+            try:
+                Point(valid_argument, coordinates_unit=parameter)
+            except Exception:
+                self.fail("Unexpected exception when invoking set_geo_reference_system().")
 
 
 if __name__ == "__main__":

@@ -435,3 +435,12 @@ class Point(list):
             A deep copy of this point.
         """
         return Point(self, geo_reference_system=self.__geo_reference_system, coordinates_unit=self.__coordinates_unit)
+
+    def is_coordinates_unit_valid(self):
+        return self.get_geo_reference_system() == 'cartesian' or \
+               (
+                       (self.get_coordinates_unit() == 'degrees' and -180 <= self.x_lon <= 180 and
+                        -90 <= self.y_lat <= 90) or
+                       (self.get_coordinates_unit() == 'radians' and -np.pi <= self.x_lon <= np.pi and
+                        -np.pi <= self.y_lat <= np.pi)
+               )
