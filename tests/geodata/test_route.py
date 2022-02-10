@@ -251,6 +251,16 @@ class TestPointMethods(unittest.TestCase):
         invalid_points = [point_radians_1, point_degrees_1]
         self.assertRaises(Exception, Route, invalid_points)
 
+    def test_get_geo_reference_system(self):
+        point_cartesian = Point([1, 1], geo_reference_system='cartesian')
+        point_latlon = Point([1, 1], coordinates_unit='radians', geo_reference_system='latlon')
+        route_cartesian = Route([point_cartesian, point_cartesian])
+        route_latlon = Route([point_latlon, point_latlon])
+        self.assertEqual('cartesian', route_cartesian.get_geo_reference_system())
+        self.assertEqual('latlon', route_latlon.get_geo_reference_system())
+        invalid_points = [point_cartesian, point_latlon]
+        self.assertRaises(Exception, Route, invalid_points)
+
     def test_max_speed(self):
         time_between_route_points = Timedelta(seconds=10)
         point_0 = Point([0, 0], 'cartesian')

@@ -48,6 +48,26 @@ class Route(list):
             this_routes_coordinates_unit = coordinates_unit
         return this_routes_coordinates_unit
 
+    def get_geo_reference_system(self):
+        """
+        Returns the geo_reference_system of the points of this route. If the geo_reference_system is not the same for
+        all points, raises an exception.
+
+        Returns
+        -------
+        this_routes_geo_reference_system : {'latlon', 'cartesian'}
+            The geo_reference_system of the points of this route.
+        """
+        default_geo_reference_system = Point([0, 0]).get_geo_reference_system()
+        this_routes_geo_reference_system = default_geo_reference_system
+        if len(self) > 0:
+            geo_reference_system = self[0].get_geo_reference_system()
+            for point in self:
+                if point.get_geo_reference_system() != geo_reference_system:
+                    raise Exception("Not all points of route have the same geo reference system.")
+            this_routes_geo_reference_system = geo_reference_system
+        return this_routes_geo_reference_system
+
     def __init__(self, route=None, timestamps=None, coordinates_unit=None):
         """
         Creates a new Route object.
@@ -91,8 +111,9 @@ class Route(list):
                     if timestamps is not None:
                         point = PointT(point, timestamps[idx])
                 self.__setitem__(idx, point)
-            # make sure that provided points do have the same coordinates_unit
+            # make sure that provided points do have the same coordinates unit and geo reference system
             self.get_coordinates_unit()
+            self.get_geo_reference_system()
 
             if self.has_timestamps():
                 self.sort_by_time()
