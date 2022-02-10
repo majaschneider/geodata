@@ -26,6 +26,8 @@ def get_bearing(point_a, point_b):
     """
     if point_a.get_geo_reference_system() != 'latlon' or point_b.get_geo_reference_system() != 'latlon':
         raise ValueError("Both points need to be in 'latlon' format.")
+    if point_a.get_coordinates_unit() != point_b.get_coordinates_unit():
+        warnings.warn('Coordinates do not have the same unit and will be converted before calculation.')
     point_a = point_a.to_radians(ignore_warning=True)
     point_b = point_b.to_radians(ignore_warning=True)
     lon1, lat1 = point_a
@@ -55,6 +57,8 @@ def get_distance(point_a, point_b):
     geo_ref_b = point_b.get_geo_reference_system()
     if geo_ref_a != geo_ref_b:
         raise ValueError("Both points need to have the same geo_reference_system.")
+    if point_a.get_coordinates_unit() != point_b.get_coordinates_unit():
+        warnings.warn('Coordinates do not have the same unit and will be converted before calculation.')
     if geo_ref_a == 'latlon':
         point_a = point_a.to_degrees(ignore_warning=True)
         point_b = point_b.to_degrees(ignore_warning=True)

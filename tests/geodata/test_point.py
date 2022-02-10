@@ -124,6 +124,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(expected_bearing, get_bearing(point_a, point_b), places=4)
         # test bearing on Earth
         self.assertAlmostEqual(self.angle, get_bearing(self.start_point, self.end_point), places=3)
+        # warning is thrown, when points do not have the same coordinates unit
+        self.assertWarns(UserWarning, get_bearing, point_a, point_b.to_degrees())
 
     def test_get_distance(self):
         # test distance in cartesian plane
@@ -135,6 +137,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, self.end_point), delta=1)
         end_point_degrees = self.end_point.to_degrees()
         self.assertAlmostEqual(self.distance, get_distance(self.start_point, end_point_degrees), delta=1)
+        # warning is thrown, when points do not have the same coordinates unit
+        self.assertWarns(UserWarning, get_distance, point_a.to_latlon(), point_b.to_latlon().to_degrees())
 
     def test_get_interpolated_point(self):
         ratio = 0.5
