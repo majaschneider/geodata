@@ -19,6 +19,7 @@ class TestPointMethods(unittest.TestCase):
     def test_init(self):
         # initializes with empty list
         self.assertEqual(Route([]), Route())
+
         for illegal_route_argument in [
             # disallow other list items than lists
             1.0,
@@ -35,6 +36,7 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(Route, type(Route([[0, 0], [1, 1]])))
         self.assertEqual(Route, type(Route([Point([0, 0])])))
         self.assertEqual(Route, type(Route([Point([0, 0]), Point([1, 1])])))
+
         # successfully creates a route with timestamps
         point_0 = [0, 0]
         point_1 = [1, 1]
@@ -44,6 +46,30 @@ class TestPointMethods(unittest.TestCase):
         timestamps = [timestamp_0, timestamp_1]
         expected_route = Route([PointT(point_0, timestamp=timestamp_0), PointT(point_1, timestamp=timestamp_1)])
         self.assertEqual(expected_route, Route(route, timestamps))
+
+        # unit is derived from points that route is initialized with
+        point_degrees = Point([-8, 41], coordinates_unit='degrees')
+        point_radians = Point([0, 0], coordinates_unit='radians')
+        self.assertEqual('radians', Route([[0, 0], point_radians]).get_coordinates_unit())
+        self.assertEqual('radians', Route([point_radians]).get_coordinates_unit())
+        self.assertEqual('degrees', Route([point_degrees]).get_coordinates_unit())
+        self.assertEqual('degrees', Route([point_degrees, point_degrees]).get_coordinates_unit())
+        # check that points have equal unit, otherwise raise error
+        for illegal_route_argument in [
+            [[0, 0], point_degrees],
+            [point_radians, point_degrees]
+        ]:
+            self.assertRaises(Exception, Route, illegal_route_argument)
+
+        # if no points but list provided at init, assume coordinates unit is point default 'radians'
+        self.assertEqual('radians', Route([[0, 0], [1, 1]]).get_coordinates_unit())
+        # if points list and coordinates_unit parameter provided, initializes the list with the given unit
+        route = Route([[-8, 41], [-8.1, 41.1]], coordinates_unit='degrees')
+        self.assertEqual('degrees', route.get_coordinates_unit())
+        self.assertEqual([-8, 41], route[0])
+        # if points of type Point and coordinates_unit parameter provided, throws an error if mismatch
+        self.assertRaises(Exception, Route, [point_degrees], coordinates_unit='radians')
+        self.assertRaises(Exception, Route, [point_radians], coordinates_unit='degrees')
 
     def test_set_item(self):
         # assures that list items are points
@@ -57,17 +83,55 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(route, route_from_tensor)
 
     def test_append(self):
-        route_default = Route()
-        route_default.append([0, 0])
-        self.assertEqual(Route([[0, 0]]), route_default)
+        point_degrees = Point([-8, 41], coordinates_unit='degrees')
+        point_radians = Point([3, 3], coordinates_unit='radians')
+        point_with_timestamp = PointT([3, 3], timestamp=pd.Timestamp(1))
 
-        # timestamp will be lost but point appended
+        # successfully appends lists to empty routes
+        route = Route()
+        route.append([2, 2])
+        self.assertEqual(Route([[2, 2]]), route)
+
+        # successfully appends points and has the correct coordinates_unit
+        route = Route()
+        route.append(point_degrees)
+        self.assertEqual(Route([point_degrees]), route)
+        self.assertEqual('degrees', route.get_coordinates_unit())
+
+        route = Route()
+        route.append(point_radians)
+        self.assertEqual(Route([point_radians]), route)
+        self.assertEqual('radians', route.get_coordinates_unit())
+
+        # successfully appends lists to non-empty routes
+        route_radians = Route([[2, 2]])
+        route_radians.append([1, 1])
+        self.assertEqual(Route([[2, 2], [1, 1]]), route_radians)
+        self.assertEqual('radians', route_radians.get_coordinates_unit())
+
+        route_radians = Route([point_radians])
+        route_radians.append(point_radians)
+        self.assertEqual(Route([point_radians, point_radians]), route_radians)
+        self.assertEqual('radians', route_radians.get_coordinates_unit())
+
+        route_degrees = Route([point_degrees])
+        route_degrees.append(point_degrees)
+        self.assertEqual(Route([point_degrees, point_degrees]), route_degrees)
+        self.assertEqual('degrees', route_degrees.get_coordinates_unit())
+
+        # successfully appends a point with timestamp to a route with timestamps
+        route_with_timestamps = Route([point_with_timestamp])
+        route_with_timestamps.append(point_with_timestamp)
+        self.assertEqual(Route([[3, 3], [3, 3]]), route_with_timestamps)
+        self.assertTrue(route_with_timestamps.has_timestamps())
+
+        # when point with timestamp is added to route without timestamps, timestamp will be lost but point appended
+        route_without_timestamps = Route([Point([3, 3])])
         with self.assertWarns(Warning):
-            route_default.append(PointT([1, 1], timestamp=pd.Timestamp(0)))
-        self.assertEqual(Route([[0, 0], [1, 1]]), route_default)
-        self.assertFalse(route_default.has_timestamps())
+            route_without_timestamps.append(point_with_timestamp)
+        self.assertEqual(Route([[3, 3], [3, 3]]), route_without_timestamps)
 
-        # append a point with differing coordinates_unit
+        # appends a point with differing coordinates_unit and changes the point's coordinates_unit before appending
         route_radians = Route([[0.1, 0.5]])
         point_degrees = Point([-8, 41], coordinates_unit='degrees')
         point_radians = point_degrees.to_radians()
@@ -75,10 +139,10 @@ class TestPointMethods(unittest.TestCase):
             route_radians.append(point_degrees)
         self.assertEqual(Route([[0.1, 0.5], point_radians]), route_radians)
 
-        route_degrees = Route([[-8, 41]], coordinates_unit='degrees')
+        route_degrees = Route([point_degrees])
         with self.assertWarns(Warning):
             route_degrees.append(point_radians)
-        self.assertEqual(Route([[-8, 41], point_degrees]), route_degrees)
+        self.assertEqual(Route([point_degrees, point_degrees]), route_degrees)
 
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)
@@ -182,11 +246,10 @@ class TestPointMethods(unittest.TestCase):
         point_radians_2 = Point([math.radians(-8.1), math.radians(41.1)])
         route_degrees = Route([point_degrees_1, point_degrees_2])
         route_radians = Route([point_radians_1, point_radians_2])
-        invalid_route = Route([point_radians_1, point_degrees_1])
         self.assertEqual('radians', route_radians.get_coordinates_unit())
         self.assertEqual('degrees', route_degrees.get_coordinates_unit())
-        with self.assertRaises(Exception):
-            invalid_route.get_coordinates_unit()
+        invalid_points = [point_radians_1, point_degrees_1]
+        self.assertRaises(Exception, Route, invalid_points)
 
     def test_max_speed(self):
         time_between_route_points = Timedelta(seconds=10)
