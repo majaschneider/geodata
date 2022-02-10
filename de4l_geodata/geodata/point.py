@@ -131,6 +131,9 @@ class Point(list):
         self.__earth_radius = 6_371_000
         self.x_lon = coordinates[0]
         self.y_lat = coordinates[1]
+        if not self.is_coordinates_unit_valid():
+            raise Exception(f"Coordinates are not in the valid value range for coordinates_unit '"
+                            f"{self.get_coordinates_unit()}'.")
         if not (isinstance(coordinates, list) and len(coordinates) == 2):
             raise ValueError("Coordinates need to be a list with two elements.")
         for i in range(2):

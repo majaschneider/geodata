@@ -173,8 +173,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(point_degrees.x_lon, point.x_lon)
 
         # cannot convert into degrees if geo reference system is not 'latlon'
-        with self.assertRaises(ValueError):
-            point_radians.to_cartesian().to_radians()
+        point = point_radians.to_cartesian()
+        self.assertRaises((ValueError, Exception), point.to_radians)
 
         # if already in radians, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):
@@ -213,8 +213,8 @@ class TestPointMethods(unittest.TestCase):
         self.assertEqual(point_radians.x_lon, point.x_lon)
 
         # cannot convert into degrees if geo reference system is not 'latlon'
-        with self.assertRaises(ValueError):
-            point_radians.to_cartesian().to_degrees()
+        point = point_radians.to_cartesian()
+        self.assertRaises((ValueError, Exception), point.to_degrees)
 
         # if already in radians, throws a warning and does not change the point coordinates
         with self.assertWarns(Warning):

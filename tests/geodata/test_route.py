@@ -3,6 +3,7 @@ import unittest
 import math
 
 import pandas as pd
+import numpy as np
 import torch
 from pandas import Timestamp, Timedelta
 
@@ -149,6 +150,12 @@ class TestPointMethods(unittest.TestCase):
         point_cartesian = Point([3, 3], geo_reference_system='cartesian')
         self.assertRaises(Exception, route_latlon.append, point_cartesian)
 
+        # checks if the point to be appended has valid coordinates
+        with self.assertRaises(Exception):
+            Route([[0.1, 0.5]]).append([np.pi + 0.1, np.pi])
+        with self.assertRaises(Exception):
+            Route([[-8, 41]], coordinates_unit='degrees').append([180.1, 90])
+
     def test_scale(self):
         scale_values = (-1, 1, -1, 1)
         r = Route([[-1, 1]])
@@ -282,7 +289,10 @@ class TestPointMethods(unittest.TestCase):
                                  Point([0, 150], 'cartesian')])
         route_converted = route_cartesian.to_latlon().to_cartesian()
         for i in range(len(route_cartesian)):
-            self.assertAlmostEqual(Point(route_cartesian[i]).y_lat, Point(route_converted[i]).y_lat)
+            self.assertAlmostEqual(
+                Point(route_cartesian[i], 'cartesian').y_lat,
+                Point(route_converted[i], 'cartesian').y_lat
+            )
 
         route = route_cartesian.deep_copy()
         route.to_latlon_()
