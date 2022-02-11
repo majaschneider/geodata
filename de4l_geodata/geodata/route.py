@@ -3,6 +3,7 @@
 import warnings
 
 import torch
+import numpy as np
 from de4l_geodata.geodata.point import Point, get_distance
 from de4l_geodata.geodata.point_t import PointT
 
@@ -448,3 +449,19 @@ class Route(list):
             if current_speed_kmh > maximum_speed_kmh:
                 maximum_speed_kmh = current_speed_kmh
         return maximum_speed_kmh
+
+    def get_average_point(self):
+        """
+        Calculates the average position from all points of this route. If this route contains points with timestamp,
+        they are ignored.
+
+        Returns
+        -------
+        avg_point : Point or None
+            Average position over all points of this route or None if route is empty.
+        """
+        avg_point = None
+        if len(self) > 0:
+            avg_point = Point([np.mean([point.x_lon for point in self]), np.mean([point.y_lat for point in self])],
+                              self[0].get_geo_reference_system(), self.get_coordinates_unit())
+        return avg_point
