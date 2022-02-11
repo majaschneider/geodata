@@ -164,7 +164,7 @@ class Route(list):
 
         Parameters
         ----------
-        value : list or Point
+        value : List or Point
             The point that is to be appended to this route. If it is in list format, it is converted into a Point object
             with default geo_reference_system ('latlon') and with the coordinates_unit of this route. If a point with
             timestamp is appended to a route that has no timestamps, the point is appended but the timestamp will be
