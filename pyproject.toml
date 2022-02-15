@@ -25,6 +25,10 @@ de4l_detour_detection = { git = "ssh://git@git.informatik.uni-leipzig.de/scads/d
 [tool.poetry.extras]
 torch = ["torch"]
 
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+pylint = "^2.12.2"
+
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata/-/issues"

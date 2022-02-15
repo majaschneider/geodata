@@ -25,12 +25,23 @@ variables:
 cache:
   paths:
     - .cache/pip
+    - venv/
 
 before_script:
+  # Setup ssh connection to be able to download and install dependencies from GitLab.
+  # See: https://docs.gitlab.com/ee/ci/ssh_keys/
+  - 'command -v ssh-agent >/dev/null || ( yum update -y && yum install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan -H git.informatik.uni-leipzig.de >> ~/.ssh/known_hosts
+
   - python --version # Print Python version for debugging
   - pip install --upgrade pip
   - pip --version # Print pip version for debugging
   - pip install poetry
+  - poetry config virtualenvs.create false
   - poetry install --extras torch
 
 stages:
@@ -41,17 +52,15 @@ flake8:
   stage: code analysis
   allow_failure: true
   script:
-    - pip install flake8
       # Check for max line length of 120. Use Black with option -l 120 to check this locally.
-    - flake8 --max-line-length=120 */*.py
+    - poetry run flake8 --max-line-length=120 */*.py
 
 pylint:
   stage: code analysis
   allow_failure: true
   script:
-    - pip install pylint
       # Run pylint with line length warnings (C0301) disabled.
-    - pylint -d C0301 */*.py
+    - poetry run pylint -d C0301 */*.py
 
 unittest:
   stage: test
