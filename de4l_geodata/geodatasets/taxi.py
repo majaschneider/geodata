@@ -4,7 +4,6 @@ process and work with this dataset.
 Source: https://www.kaggle.com/c/pkdd-15-taxi-trip-time-prediction-ii/data
 """
 import datetime
-import warnings
 
 import torch
 import numpy as np
@@ -12,6 +11,8 @@ import pandas as pd
 from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
+
+from de4l_geodata.helper import parser
 from de4l_geodata.geodata.route import Route
 from de4l_geodata.geodata.point import get_distance
 
@@ -70,7 +71,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
 
         # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
         data_frame["route"] = data_frame["POLYLINE"].copy()\
-            .apply(lambda polyline: self.route_str_to_list(polyline) if polyline != '[]' else [])\
+            .apply(lambda polyline: parser.route_str_to_list(polyline) if polyline != '[]' else [])\
             .apply(lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
 
         data_frame['max_speed_kmh'] = data_frame['route'].copy()\
@@ -208,33 +209,6 @@ class TaxiServiceTrajectoryDataset(Dataset):
         route_length = len(row["route"])
         start_timestamp = row["trip_time_start_utc"]
         return [start_timestamp + i * time_between_route_points for i in range(route_length)]
-
-    @classmethod
-    def route_str_to_list(cls, route):
-        """
-        Converts route from string to list format.
-
-        Parameters
-        ----------
-        route : str
-            A route in string format. Example: [[-8.58, 41.14], [-8.5, 41.1]]
-
-        Returns
-        -------
-        transformed : list
-            A route in list format.
-
-        """
-        transformed = []
-        try:
-            route = route.replace(" ", "").replace("],[", "];[").replace("[[", "[").replace("]]", "]").split(";")
-            for point in route:
-                point = point.replace("[", "").replace("]", "").split(",")
-                transformed.append([float(point[0]), float(point[1])])
-        except Exception:
-            warnings.warn("An error occurred during parsing of route from string to list. An empty list will be "
-                          "returned.")
-        return transformed
 
     @classmethod
     def max_speed(cls, route, time_between_route_points):

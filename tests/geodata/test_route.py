@@ -313,6 +313,15 @@ class TestPointMethods(unittest.TestCase):
         for point in route:
             self.assertEqual('degrees', point.get_coordinates_unit())
 
+    def test_get_average_point(self):
+        point_a = Point([0, 1], geo_reference_system='cartesian', coordinates_unit='radians')
+        point_b = Point([3, 8], geo_reference_system='cartesian', coordinates_unit='radians')
+        point_c = Point([6, -6], geo_reference_system='cartesian', coordinates_unit='radians')
+        route = Route([point_a, point_b, point_c])
+        expected_average_point = Point([3, 1], geo_reference_system='cartesian', coordinates_unit='radians')
+        self.assertEqual(expected_average_point, route.get_average_point())
+        self.assertIsNone(Route().get_average_point())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -113,7 +113,7 @@ class Point(list):
 
         Parameters
         ----------
-        coordinates : list
+        coordinates : List
             Contains the x- and y-coordinate of this point in the form [x,y]. If geo_reference_system
             is 'latlon', the values [x,y] refer to [longitude, latitude] in radian.
         geo_reference_system : {'latlon', 'cartesian'}

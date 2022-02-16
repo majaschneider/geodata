@@ -32,11 +32,6 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
                     self.assertGreaterEqual(point.y_lat, 0)
                     self.assertGreaterEqual(1, point.y_lat)
 
-    def test_route_str_to_list(self):
-        route_list = [[-8.5, 41.14], [-8.58, 41.14]]
-        route_str = str(route_list)
-        self.assertEqual(route_list, self.dataset.route_str_to_list(route_str))
-
     def test_calculate_location_bounds(self):
         file_path = "tests/resources/test-taxi-dataset-small.csv"
         data_frame = pd.read_csv(file_path, sep=",", encoding="latin1")
