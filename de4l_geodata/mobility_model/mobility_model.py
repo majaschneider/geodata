@@ -20,7 +20,7 @@ def execute_sql(sql, db, data=None):
 
 
 class MobilityModel:
-    def __init__(self, path_to_file, nominatim_url, ors_path, ors_profile):
+    def __init__(self, path_to_file, nominatim, ors_path, ors_profile):
         """
         Initializes this mobility model.
 
@@ -29,9 +29,8 @@ class MobilityModel:
         path_to_file : str
             The path pointing to the database file that will hold the mobility information of this model, including
             file ending '.db'. The path to the folder of this file needs to exist.
-        nominatim_url : str
-            The url pointing to a running instance of Nominatim serving the map that is needed for creating mobility
-            models.
+        nominatim : Nominatim
+            A running instance of Nominatim.
         ors_path : str
             The base address of an available instance of Openrouteservice. Its structure should be '[host]:[port]'.
         ors_profile :
@@ -40,9 +39,7 @@ class MobilityModel:
             Specifies the mode of transport to use when calculating directions.
             See: https://openrouteservice-py.readthedocs.io/en/latest/#module-openrouteservice.directions
         """
-        # create Nominatim instance
-        self.nominatim_url = nominatim_url
-        self.nominatim = Nominatim(scheme='http', domain=nominatim_url)
+        self.nominatim = nominatim
 
         self.ors_path = ors_path
         self.ors_profile = ors_profile
