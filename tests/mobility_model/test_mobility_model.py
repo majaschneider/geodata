@@ -5,6 +5,7 @@ import pandas as pd
 
 from de4l_geodata.mobility_model import mobility_model
 from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset as Td
+from geopy.geocoders import Nominatim
 from de4l_geodata.helper import parser
 
 
@@ -16,8 +17,10 @@ class TestHelper(unittest.TestCase):
             os.remove(self.path_to_db)
         except Exception:
             pass
-        nominatim_path, ors_path = 'localhost:8080', 'localhost:8008'
-        self.model = mobility_model.MobilityModel(self.path_to_db, nominatim_path, ors_path, 'driving-car')
+        nominatim_url = 'service.enterprise.informatik.uni-leipzig.de/de4l-privacy/nominatim'
+        nominatim = Nominatim(scheme='https', domain=nominatim_url)
+        ors_path = 'localhost:8008'
+        self.model = mobility_model.MobilityModel(self.path_to_db, nominatim, ors_path, 'driving-car')
         taxi_dataset = Td.create_from_csv('tests/resources/test-taxi-dataset-profile.csv', max_allowed_speed_kmh=120)
         self.model.calculate_mobility_model(taxi_dataset.data_frame)
 
