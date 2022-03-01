@@ -427,7 +427,6 @@ class Point(list):
         else:
             if not ignore_warnings:
                 warnings.warn("Geo reference system is already latlon.")
-        return self
 
     def to_latlon(self, ignore_warnings=False):
         """
