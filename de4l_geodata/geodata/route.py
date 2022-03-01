@@ -343,6 +343,11 @@ class Route(list):
         Returns a copy of this route with each point of the route converted from a 'latlon' to a 'cartesian' geo
         reference system.
 
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already 'cartesian'.
+
         Returns
         -------
         route_cartesian : Route
@@ -353,7 +358,13 @@ class Route(list):
         return route_copy
 
     def to_cartesian_(self, ignore_warnings=False):
-        """Converts each point of this route instantly from a 'latlon' to a 'cartesian' geo reference system.
+        """
+        Converts each point of this route instantly from a 'latlon' to a 'cartesian' geo reference system.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already 'cartesian'.
         """
         for point in self:
             point.to_cartesian_(ignore_warnings)
@@ -362,6 +373,11 @@ class Route(list):
         """
         Returns a copy of this route with each point of the route converted from a 'cartesian' to a 'latlon' geo
         reference system.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already 'latlon'.
 
         Returns
         -------
@@ -373,24 +389,40 @@ class Route(list):
         return route_copy
 
     def to_latlon_(self, ignore_warnings=False):
-        """Converts each point of this route instantly from a 'cartesian' to a 'latlon' geo reference system.
+        """
+        Converts each point of this route instantly from a 'cartesian' to a 'latlon' geo reference system.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already 'latlon'.
         """
         for point in self:
             point.to_latlon_(ignore_warnings)
 
-    def to_radians_(self):
+    def to_radians_(self, ignore_warnings=False):
         """
         Converts the coordinates of this route's points into radians unit, if their unit is 'degrees' and the
         geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes
         are made.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the coordinates unit is already 'radians'.
         """
         for point in self:
-            point.to_radians_()
+            point.to_radians_(ignore_warnings)
 
-    def to_radians(self):
+    def to_radians(self, ignore_warnings=False):
         """
         Returns a copy of this route with the coordinates changed into radians unit, if the unit is 'degrees' and the
         geo_reference_system of its points is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the coordinates unit is already 'radians'.
 
         Returns
         -------
@@ -399,22 +431,32 @@ class Route(list):
             the geo_reference_system of its points is 'latlon'.
         """
         route_copy = self.deep_copy()
-        route_copy.to_radians_()
+        route_copy.to_radians_(ignore_warnings)
         return route_copy
 
-    def to_degrees_(self):
+    def to_degrees_(self, ignore_warnings=False):
         """
         Converts the coordinates of this route's points into degrees unit, if their unit is 'radians' and the
         geo_reference_system is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown and no changes
         are made.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the coordinates unit is already 'degrees'.
         """
         for point in self:
-            point.to_degrees_()
+            point.to_degrees_(ignore_warnings)
 
-    def to_degrees(self):
+    def to_degrees(self, ignore_warnings=False):
         """
         Returns a copy of this route with the coordinates changed into degrees unit, if the unit is 'radians' and the
         geo_reference_system of its points is 'latlon'. If the geo_reference_system is 'cartesian', an error is thrown.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the coordinates unit is already 'degrees'.
 
         Returns
         -------
@@ -423,7 +465,7 @@ class Route(list):
             the geo_reference_system of its points is 'latlon'.
         """
         route_copy = self.deep_copy()
-        route_copy.to_degrees_()
+        route_copy.to_degrees_(ignore_warnings)
         return route_copy
 
     def max_speed(self, time_between_route_points):
