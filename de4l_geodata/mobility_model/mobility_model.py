@@ -79,8 +79,8 @@ class MobilityModel:
             self.nr_routes += 1
 
             for i in range(route_len - 1):
-                current_point = route[i].to_degrees(ignore_warning=True)
-                next_point = route[i + 1].to_degrees(ignore_warning=True)
+                current_point = route[i].to_degrees(ignore_warnings=True)
+                next_point = route[i + 1].to_degrees(ignore_warnings=True)
 
                 current_osm_id = self.nominatim.reverse([current_point.y_lat, current_point.x_lon]).raw['osm_id']
                 next_osm_id = self.nominatim.reverse([next_point.y_lat, next_point.x_lon]).raw['osm_id']
