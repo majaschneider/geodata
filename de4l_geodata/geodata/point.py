@@ -375,6 +375,11 @@ class Point(list):
         """
         Transforms coordinates of this point from latitude and longitude (both in radian) into cartesian. The point is
         modified instantly.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already cartesian.
         """
         if self.get_geo_reference_system() == "latlon":
             radius = self.__earth_radius / 1000  # km
@@ -390,6 +395,11 @@ class Point(list):
         Returns a copy of this point with coordinates changed from latitude and longitude (both in radian) into
         cartesian.
 
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already cartesian.
+
         Returns
         -------
         Point
@@ -403,6 +413,11 @@ class Point(list):
         """
         Transforms coordinates of this point from cartesian into latitude and longitude (both in radians). The point is
         modified instantly.
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already latlon.
         """
         if self.get_geo_reference_system() == "cartesian":
             r = self.__earth_radius / 1000  # km
@@ -418,6 +433,11 @@ class Point(list):
         """
         Returns a copy of this point with coordinates changed from cartesian into latitude and longitude (both in
         radians).
+
+        Parameters
+        ----------
+        ignore_warnings : bool
+            If True, no warning is thrown, when the geo reference system is already latlon.
 
         Returns
         -------
