@@ -20,7 +20,7 @@ def execute_sql(sql, db, data=None):
 
 
 class MobilityModel:
-    def __init__(self, path_to_file, nominatim, ors_path, ors_profile):
+    def __init__(self, path_to_file, nominatim, ors_path, ors_scheme, ors_profile):
         """
         Initializes this mobility model.
 
@@ -33,6 +33,8 @@ class MobilityModel:
             A running instance of Nominatim.
         ors_path : str
             The base address of an available instance of Openrouteservice. Its structure should be '[host]:[port]'.
+        ors_scheme : str
+            The protocol to be used for openrouteservice queries, e.g. http or https.
         ors_profile :
             {'driving-car', 'driving-hgv', 'foot-walking', 'foot-hiking', 'cycling-regular',
             'cycling-road', 'cycling-mountain', 'cycling-electric'}
@@ -43,6 +45,7 @@ class MobilityModel:
 
         self.ors_path = ors_path
         self.ors_profile = ors_profile
+        self.ors_scheme = ors_scheme
 
         # create databases or establish connection
         self.db = sqlite3.connect(path_to_file)
@@ -86,7 +89,8 @@ class MobilityModel:
                 next_osm_id = self.nominatim.reverse([next_point.y_lat, next_point.x_lon]).raw['osm_id']
 
                 directions = \
-                    get_directions_for_route(Route([current_point, next_point]), self.ors_path, self.ors_profile)
+                    get_directions_for_route(Route([current_point, next_point]), self.ors_path, self.ors_scheme,
+                                             self.ors_profile)
                 distance = directions[0]['distance']
                 duration = directions[0]['duration']
 
