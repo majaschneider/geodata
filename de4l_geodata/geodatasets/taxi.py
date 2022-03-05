@@ -22,7 +22,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
     Parses Taxi Service Trajectory dataset.
     """
 
-    def __init__(self, data_frame, scale=False, location_bounds=None, max_allowed_speed_kmh=None):
+    def __init__(self, data_frame, scale=False, location_bounds=None, max_allowed_speed_kmh=None, min_route_length=1):
         """
         Initializes the dataset based on a pandas.DataFrame. Time between successive points in a route is assumed to be
         fifteen seconds. The data is sorted in ascending order by the route's start timestamp.
@@ -64,15 +64,21 @@ class TaxiServiceTrajectoryDataset(Dataset):
             The maximum allowed speed in kilometers per hour, that a taxi can go. If a trip contains points that
             indicate a higher speed, the trip data is assumed to be incomplete and will not be loaded. If None, there
             is no constraint as to the speed limit.
+        min_route_length : int
+            The minimum amount of points that a route should contain. If it has fewer points, it will be dropped. This
+            value will be set to at least one.
         """
         self.scale = scale
         self.time_between_route_points = pd.Timedelta(seconds=15)
         self.max_allowed_speed_kmh = max_allowed_speed_kmh
+        self.min_route_length = min_route_length if min_route_length >= 1 else 1
 
         # create a Route object ('lonlat' and 'radians') from 'POLYLINE' ('lonlat' and 'degrees')
         data_frame["route"] = data_frame["POLYLINE"].copy()\
             .apply(lambda polyline: parser.route_str_to_list(polyline) if polyline != '[]' else [])\
             .apply(lambda route_list: Route(route_list, coordinates_unit='degrees').to_radians())
+
+        data_frame['route_len'] = data_frame['route'].copy().transform(len)
 
         data_frame['max_speed_kmh'] = data_frame['route'].copy()\
             .apply(lambda route: self.max_speed(route, self.time_between_route_points))
@@ -80,7 +86,9 @@ class TaxiServiceTrajectoryDataset(Dataset):
         # drop data that contains errors
         error_constraints = [
             [data_frame["POLYLINE"] == "[]", "rows dropped because 'POLYLINE' was empty."],
-            [data_frame["MISSING_DATA"], "rows dropped because 'MISSING_DATA' was True."]
+            [data_frame["MISSING_DATA"], "rows dropped because 'MISSING_DATA' was True."],
+            [data_frame['route_len'] < min_route_length, f'rows dropped because route has less than {min_route_length}'
+                                                         f' point(s).']
         ]
         if max_allowed_speed_kmh is not None:
             error_constraints.append(
@@ -259,7 +267,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         return longitude_min, longitude_max, latitude_min, latitude_max
 
     @classmethod
-    def create_from_csv(cls, path, limit=None, max_allowed_speed_kmh=60):
+    def create_from_csv(cls, path, limit=None, max_allowed_speed_kmh=60, min_route_length=1):
         """
         Initializes a TaxiServiceTrajectoryDataset by reading from a csv. If size is given, only the first lines are
         read. The csv file should at least have the columns mentioned in TaxiServiceTrajectoryDataset.__init__():
@@ -282,6 +290,9 @@ class TaxiServiceTrajectoryDataset(Dataset):
         max_allowed_speed_kmh : int
             The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
             trip data is assumed to be incomplete and will not be loaded.
+        min_route_length : int
+            The minimum amount of points that a route should contain. If it has fewer points, it will be dropped. This
+            value will be set to at least one.
 
         Returns
         -------
@@ -298,4 +309,5 @@ class TaxiServiceTrajectoryDataset(Dataset):
         else:
             data_frame = pd.read_csv(path, sep=',', encoding='latin1')
 
-        return TaxiServiceTrajectoryDataset(data_frame, max_allowed_speed_kmh=max_allowed_speed_kmh)
+        return TaxiServiceTrajectoryDataset(data_frame, max_allowed_speed_kmh=max_allowed_speed_kmh,
+                                            min_route_length=min_route_length)
