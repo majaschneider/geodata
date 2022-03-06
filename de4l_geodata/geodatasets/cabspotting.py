@@ -91,6 +91,7 @@ class CabspottingDataset(Dataset):
                    'stops': None}
         df = pd.DataFrame(columns)
         df['route'].map(Route)
+        df['timestamps'].map(list)
         df['stops'].map(list)
         return df
 
