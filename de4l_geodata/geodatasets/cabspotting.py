@@ -32,30 +32,32 @@ class CabspottingDataset(Dataset):
         self.data_frame_per_route = self.create_stop_based_data_frame()
         current_taxi_id = int(self.data_frame_per_point['TAXI_ID'].iloc[0])
         current_timestamp = pd.Timestamp(dt.datetime.utcfromtimestamp(self.data_frame_per_point['DATE_TIME'].iloc[0]))
-        current_occupancy = bool(self.data_frame_per_point['OCCUPANCY'].iloc[0])
+        current_occupancy = int(self.data_frame_per_point['OCCUPANCY'].iloc[0])
         route = Route()
         stops = []
         point_idx = 0
         for _, row in self.data_frame_per_point.iterrows():
             next_taxi_id = int(row['TAXI_ID'])
             next_timestamp = pd.Timestamp(dt.datetime.utcfromtimestamp(row['DATE_TIME']))
-            next_occupancy = bool(row['OCCUPANCY'])
+            next_occupancy = int(row['OCCUPANCY'])
             # If taxi id or date is different, create a new route
             if next_taxi_id != current_taxi_id or next_timestamp.date() != current_timestamp.date():
-                if current_occupancy != next_occupancy:
-                    # customer has been picked up
-                    if current_occupancy == 1:
-                        stops.append(point_idx)
-                    # customer has been dropped off at the last point
-                    else:
-                        stops.append(point_idx - 1)
-                    current_occupancy = next_occupancy
                 self.add_route(current_taxi_id, current_timestamp.date(), route.to_radians(), route.get_timestamps(),
                                stops)
                 route = Route()
                 stops = []
+                point_idx = 0
                 current_taxi_id = next_taxi_id
                 current_timestamp = next_timestamp
+                current_occupancy = next_occupancy
+            if current_occupancy != next_occupancy:
+                # customer is being picked up
+                if current_occupancy == 0:
+                    stops.append(point_idx)
+                # customer has been dropped off at the last point
+                else:
+                    stops.append(point_idx - 1)
+                current_occupancy = next_occupancy
             point_t = PointT([row['LON'], row['LAT']], timestamp=next_timestamp, coordinates_unit='degrees')
             route.append(point_t)
             point_idx += 1
@@ -113,6 +115,9 @@ class CabspottingDataset(Dataset):
             A route containing points with timestamps.
         """
         return Route(self.data_frame_per_route['route'].iloc[idx])
+
+    def get_stops(self, idx):
+        return self.data_frame_per_route['stops'].iloc[idx]
 
     @classmethod
     def create_from_txt(cls, list_of_paths_to_datasets, limit=None):
