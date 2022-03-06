@@ -267,7 +267,7 @@ class TaxiServiceTrajectoryDataset(Dataset):
         return longitude_min, longitude_max, latitude_min, latitude_max
 
     @classmethod
-    def create_from_csv(cls, path, limit=None, max_allowed_speed_kmh=60, min_route_length=1):
+    def create_from_csv(cls, path, skiprows=None, nrows=None, max_allowed_speed_kmh=60, min_route_length=1):
         """
         Initializes a TaxiServiceTrajectoryDataset by reading from a csv. If size is given, only the first lines are
         read. The csv file should at least have the columns mentioned in TaxiServiceTrajectoryDataset.__init__():
@@ -285,8 +285,10 @@ class TaxiServiceTrajectoryDataset(Dataset):
         ----------
         path : str
             Relative path to a csv file containing data required for a TaxiServiceTrajectoryDataset.
-        limit : int
-            Number of lines from the file that should be read. If None, the whole file while be read.
+        skiprows : int
+            The number of rows to skip when reading the file.
+        nrows : int
+            Number of lines from the file that should be read.
         max_allowed_speed_kmh : int
             The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
             trip data is assumed to be incomplete and will not be loaded.
@@ -296,18 +298,78 @@ class TaxiServiceTrajectoryDataset(Dataset):
 
         Returns
         -------
-        TaxiServiceTrajectoryDataset
+        dataset : TaxiServiceTrajectoryDataset
             A TaxiServiceTrajectoryDataset created from the given csv.
         """
         assert isinstance(path, str)
         assert path[-4:] == '.csv'
 
-        if isinstance(limit, int):
-            dataloader = pd.read_csv(path, sep=',', encoding='latin1', chunksize=limit)
-            data_frame = next(dataloader)
-            dataloader.close()
-        else:
-            data_frame = pd.read_csv(path, sep=',', encoding='latin1')
+        # keep first row as header
+        if skiprows is not None:
+            skiprows = range(1, skiprows + 1)
+        df = pd.read_csv(path, sep=',', encoding='latin1', skiprows=skiprows, nrows=nrows)
+        dataset = TaxiServiceTrajectoryDataset(data_frame=df, max_allowed_speed_kmh=max_allowed_speed_kmh,
+                                               min_route_length=min_route_length)
+        return dataset
 
-        return TaxiServiceTrajectoryDataset(data_frame, max_allowed_speed_kmh=max_allowed_speed_kmh,
-                                            min_route_length=min_route_length)
+    @classmethod
+    def create_from_csv_within_time_range(cls, path, start_date, end_date, max_allowed_speed_kmh=60,
+                                          min_route_length=1):
+        """
+        Initializes a TaxiServiceTrajectoryDataset by reading from a csv within the indicated time range. The csv file
+        should at least have the columns mentioned in TaxiServiceTrajectoryDataset.__init__():
+            TRIP_ID: (String)
+            CALL_TYPE: (char)
+            ORIGIN_CALL: (integer)
+            ORIGIN_STAND: (integer)
+            TAXI_ID: (integer)
+            TIMESTAMP: (integer)
+            DAYTYPE: (char)
+            MISSING_DATA: (Boolean)
+            POLYLINE: (String)
+
+        Parameters
+        ----------
+        path : str
+            Relative path to a csv file containing data required for a TaxiServiceTrajectoryDataset.
+        start_date : str
+            The date as of which to start reading from the taxi file. If None, there is no limitation.
+        end_date : str
+            The date until which to read from the taxi file. If None, there is no limitation.
+        max_allowed_speed_kmh : int
+            The maximum allowed speed that a taxi can go. If a trip contains points that indicate a higher speed, the
+            trip data is assumed to be incomplete and will not be loaded.
+        min_route_length : int
+            The minimum amount of points that a route should contain. If it has fewer points, it will be dropped. This
+            value will be set to at least one.
+
+        Returns
+        -------
+        dataset : TaxiServiceTrajectoryDataset
+            A TaxiServiceTrajectoryDataset created from the given csv.
+        """
+        # check file in chunks to find row numbers corresponding to start and end date
+        # since the file is not sorted by timestamp, the results can differ depending on the used chunksize.
+        dataloader = pd.read_csv(path, sep=',', encoding='latin1', chunksize=5_000)
+        start_idx = None
+        end_idx = None
+        for batch, df in enumerate(dataloader):
+            df['date'] = df['TIMESTAMP'].copy().apply(lambda x: datetime.datetime.utcfromtimestamp(int(x)).date())
+            df_start_date = df[df['date'] == datetime.datetime.fromisoformat(start_date).date()]
+            df_end_date = df[df['date'] == datetime.datetime.fromisoformat(end_date).date()]
+            if start_idx is None and len(df_start_date) > 0:
+                start_idx = df_start_date.index.values[0]
+            if end_idx is None and len(df_end_date) > 0:
+                end_idx = df_end_date.index.values[-1]
+            if start_idx is not None and end_idx is not None:
+                if len(df_end_date) > 0:
+                    end_idx = df_end_date.index.values[-1]
+                else:
+                    break
+        if start_idx is None:
+            raise Exception(f'Start date {start_date} not found.')
+        if end_idx is None:
+            raise Exception(f'End date {end_date} not found.')
+        dataset = cls.create_from_csv(path, skiprows=start_idx, nrows=end_idx - start_idx + 1,
+                                      max_allowed_speed_kmh=max_allowed_speed_kmh, min_route_length=min_route_length)
+        return dataset
