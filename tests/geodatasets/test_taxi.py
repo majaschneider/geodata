@@ -46,7 +46,7 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
         correct_path_dataset = TaxiServiceTrajectoryDataset.create_from_csv(path)
         self.assertTrue(isinstance(correct_path_dataset, TaxiServiceTrajectoryDataset))
 
-        correct_path_dataset_small = TaxiServiceTrajectoryDataset.create_from_csv(path, limit=100,
+        correct_path_dataset_small = TaxiServiceTrajectoryDataset.create_from_csv(path, nrows=100,
                                                                                   max_allowed_speed_kmh=999)
         self.assertEqual(100, correct_path_dataset_small.data_frame.shape[0])
 
@@ -55,6 +55,15 @@ class TestTaxiServiceTrajectoryDataset(unittest.TestCase):
 
         # test wrong path by slicing the first character off
         self.assertRaises(FileNotFoundError, lambda: TaxiServiceTrajectoryDataset.create_from_csv(path[1:]))
+
+    def test_create_from_csv_within_time_range(self):
+        path = "tests/resources/test-taxi-dataset-small.csv"
+        start_date = '2013-07-01'
+        end_date = '2013-07-01'
+        dataset = TaxiServiceTrajectoryDataset.create_from_csv_within_time_range(
+            path, start_date=start_date, end_date=end_date, max_allowed_speed_kmh=200
+        )
+        self.assertEqual(2, dataset.__len__())
 
     def test_max_speed(self):
         file_path = "tests/resources/test-taxi-dataset.csv"
