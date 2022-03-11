@@ -42,8 +42,11 @@ class TDriveDataset(Dataset):
                 current_taxi_id = next_taxi_id
                 current_timestamp = next_timestamp
                 route = Route()
-            point_t = PointT([row['LON'], row['LAT']], timestamp=next_timestamp, coordinates_unit='degrees')
-            route.append(point_t)
+            try:
+                point_t = PointT([row['LON'], row['LAT']], timestamp=next_timestamp, coordinates_unit='degrees')
+                route.append(point_t)
+            except:
+                print(f"A point could not be created ([{row['LON']}, {row['LAT']}] in degrees) and is ignored.")
         self.add_route(current_taxi_id, current_timestamp.date(), route.to_radians(), route.get_timestamps())
 
     def add_route(self, taxi_id, date, route, timestamps):
