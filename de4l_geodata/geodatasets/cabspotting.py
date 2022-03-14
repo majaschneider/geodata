@@ -62,6 +62,7 @@ class CabspottingDataset(Dataset):
             route.append(point_t)
             point_idx += 1
         self.add_route(current_taxi_id, current_timestamp.date(), route.to_radians(), route.get_timestamps(), stops)
+        self.data_frame_per_route = self.data_frame_per_route.reset_index()
 
     def add_route(self, taxi_id, date, route, timestamps, stops):
         route_data = {'taxi_id': [taxi_id], 'date': [date], 'route': [route], 'timestamps': [timestamps],
