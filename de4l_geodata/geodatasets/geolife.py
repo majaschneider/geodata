@@ -55,6 +55,7 @@ class GeoLifeDataset(Dataset):
             except:
                 print(f"A point could not be created ([{row['LON']}, {row['LAT']}] in degrees) and is ignored.")
         self.add_route(current_user_id, current_timestamp.date(), route.to_radians(), route.get_timestamps())
+        self.data_frame_per_route = self.data_frame_per_route.reset_index()
 
     def add_route(self, user_id, date, route, timestamps):
         route_data = {'user_id': [user_id], 'date': [date], 'route': [route], 'timestamps': [timestamps]}
