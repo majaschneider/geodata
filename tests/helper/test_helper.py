@@ -1,6 +1,10 @@
 import unittest
+
+import pandas as pd
+
 from de4l_geodata.helper.helper import get_digits
 from de4l_geodata.helper import parser
+from de4l_geodata.geodata.route import Route
 
 
 class TestHelper(unittest.TestCase):
@@ -16,3 +20,33 @@ class TestHelper(unittest.TestCase):
         route_list = [[-8.58, 41.14], [-8.5, 41.1]]
         route_str = str(route_list)
         self.assertEqual(route_list, parser.route_str_to_list(route_str))
+
+    def test_timestamps_str_to_list(self):
+        timestamps_list = [pd.Timestamp('2020-01-01 10:00:00'), pd.Timestamp('2020-01-02 15:00:00')]
+        timestamps_str = str(timestamps_list)
+        self.assertEqual(timestamps_list, parser.timestamps_str_to_list(timestamps_str))
+
+    def test_float_str_to_list(self):
+        float_list = [1, 2.5, 0, 7]
+        float_str = str(float_list)
+        self.assertEqual(float_list, parser.float_str_to_list(float_str))
+
+    def test_route_str_to_list(self):
+        route_degrees = Route([[-8.58, 41.14], [-8.5, 41.1]], coordinates_unit='degrees')
+        route_radians = Route([[2, 2], [1, 1]])
+
+        route_list = [route_radians, route_radians]
+        route_str = str(route_list)
+        self.assertEqual(route_list, parser.routes_str_to_list(route_str))
+
+        route_list = [route_degrees, route_degrees]
+        route_str = str(route_list)
+        self.assertEqual(route_list, parser.routes_str_to_list(route_str, coordinates_unit='degrees'))
+        with self.assertRaises(Exception):
+            parser.routes_str_to_list(route_str, coordinates_unit='radians')
+
+        route_list = [route_radians, route_degrees]
+        route_str = str(route_list)
+        with self.assertRaises(Exception):
+            parser.routes_str_to_list(route_str, coordinates_unit='radians')
+
