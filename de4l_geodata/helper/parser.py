@@ -5,6 +5,9 @@ import warnings
 
 import pandas as pd
 
+from de4l_geodata.geodata.route import Route
+from de4l_geodata.geodata.point import Point
+
 
 def route_str_to_list(route_str):
     """
@@ -87,3 +90,36 @@ def float_str_to_list(float_str):
     """
     float_list = [float(s) for s in float_str.replace('[', '').replace(']', '').replace(' ', '').split(',')]
     return float_list
+
+
+def routes_str_to_list(route_str, coordinates_unit='radians'):
+    """
+    Converts a collection of Route objects from string to list format.
+
+    Parameters
+    ----------
+    route_str : str
+        A string containing a list of Route objects, e.g. '[[[-8.58, 41.14], [-8.5, 41.1]], [[2, 2], [1, 1]]]'.
+    coordinates_unit : {'radians', 'degrees'}
+        The unit of the coordinates of the routes' points.
+
+    Returns
+    -------
+    route_list : List
+        A list of Route objects converted from route_str.
+    """
+    route_str_split = route_str.replace(' ', '').replace('[],', '').replace(',[]', '').replace('],[', '];[') \
+        .replace('[[[', '[[').replace(']]]', ']]').replace('[[', 'split').replace(']]', '').split('split')[1:]
+    route_list = []
+    for split in route_str_split:
+        route_transformed = split.split(';')
+        route_transformed = [route for route in route_transformed if route != '']
+        route = Route(coordinates_unit=coordinates_unit)
+        for point_str in route_transformed:
+            point = point_str\
+                .replace('[', '')\
+                .replace(']', '')\
+                .split(',')
+            route.append(Point([float(point[0]), float(point[1])], coordinates_unit=coordinates_unit))
+        route_list.append(route)
+    return route_list
