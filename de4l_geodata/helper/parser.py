@@ -3,6 +3,8 @@
 
 import warnings
 
+import pandas as pd
+
 
 def route_str_to_list(route_str):
     """
@@ -46,3 +48,24 @@ def points_str_to_list(points_str):
         warnings.warn("An error occurred during parsing of route from string to list. An empty list will be "
                       "returned.")
     return route_list
+
+
+def timestamps_str_to_list(timestamps_str):
+    """
+    Converts a collection of pandas.Timestamps from string to list format.
+
+    Parameters
+    ----------
+    timestamps_str : str
+        A string containing a list of pd.Timestamp objects, e.g.
+        "[Timestamp('2020-01-01 10:00:00'), Timestamp('2020-01-02 15:00:00')]".
+
+    Returns
+    -------
+    timestamps_list : List
+        A list of pandas.Timestamp objects converted from timestamp_str.
+    """
+    timestamps_split = timestamps_str.replace('[', '').replace('Timestamp(', '').replace(')', '').replace(']', '') \
+                           .replace(', ', '')[1:-1].split("''")
+    timestamps_list = [pd.Timestamp(split) for split in timestamps_split]
+    return timestamps_list

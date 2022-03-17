@@ -1,4 +1,7 @@
 import unittest
+
+import pandas as pd
+
 from de4l_geodata.helper.helper import get_digits
 from de4l_geodata.helper import parser
 
@@ -16,3 +19,8 @@ class TestHelper(unittest.TestCase):
         route_list = [[-8.58, 41.14], [-8.5, 41.1]]
         route_str = str(route_list)
         self.assertEqual(route_list, parser.route_str_to_list(route_str))
+
+    def test_timestamps_str_to_list(self):
+        timestamps_list = [pd.Timestamp('2020-01-01 10:00:00'), pd.Timestamp('2020-01-02 15:00:00')]
+        timestamps_str = str(timestamps_list)
+        self.assertEqual(timestamps_list, parser.timestamps_str_to_list(timestamps_str))
