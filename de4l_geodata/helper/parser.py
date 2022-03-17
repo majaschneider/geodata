@@ -69,3 +69,21 @@ def timestamps_str_to_list(timestamps_str):
                            .replace(', ', '')[1:-1].split("''")
     timestamps_list = [pd.Timestamp(split) for split in timestamps_split]
     return timestamps_list
+
+
+def float_str_to_list(float_str):
+    """
+    Converts a collection of Float from string to list format.
+
+    Parameters
+    ----------
+    float_str : str
+        A string containing a list of float objects, e.g. '[1, 2.5, 0, 7]'.
+
+    Returns
+    -------
+    float_list : List
+        A list of float objects converted from float_str.
+    """
+    float_list = [float(s) for s in float_str.replace('[', '').replace(']', '').replace(' ', '').split(',')]
+    return float_list

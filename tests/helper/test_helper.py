@@ -24,3 +24,8 @@ class TestHelper(unittest.TestCase):
         timestamps_list = [pd.Timestamp('2020-01-01 10:00:00'), pd.Timestamp('2020-01-02 15:00:00')]
         timestamps_str = str(timestamps_list)
         self.assertEqual(timestamps_list, parser.timestamps_str_to_list(timestamps_str))
+
+    def test_float_str_to_list(self):
+        float_list = [1, 2.5, 0, 7]
+        float_str = str(float_list)
+        self.assertEqual(float_list, parser.float_str_to_list(float_str))
