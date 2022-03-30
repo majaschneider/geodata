@@ -42,14 +42,11 @@ def points_str_to_list(points_str):
         The point collection converted into list format.
     """
     route_list = []
-    try:
-        route_str = points_str.replace(" ", "").replace("],[", "];[").split(";")
-        for point in route_str:
-            point = point.replace("[", "").replace("]", "").split(",")
+    route_str = points_str.replace(" ", "").replace("],[", "];[").split(";")
+    for point in route_str:
+        point = point.replace("[", "").replace("]", "").split(",")
+        if point[0] != '' and point[1] != '':
             route_list.append([float(point[0]), float(point[1])])
-    except Exception:
-        warnings.warn("An error occurred during parsing of route from string to list. An empty list will be "
-                      "returned.")
     return route_list
 
 
@@ -70,7 +67,7 @@ def timestamps_str_to_list(timestamps_str):
     """
     timestamps_split = timestamps_str.replace('[', '').replace('Timestamp(', '').replace(')', '').replace(']', '') \
                            .replace(', ', '')[1:-1].split("''")
-    timestamps_list = [pd.Timestamp(split) for split in timestamps_split]
+    timestamps_list = [pd.Timestamp(split) for split in timestamps_split if split != '']
     return timestamps_list
 
 
@@ -88,7 +85,7 @@ def float_str_to_list(float_str):
     float_list : List
         A list of float objects converted from float_str.
     """
-    float_list = [float(s) for s in float_str.replace('[', '').replace(']', '').replace(' ', '').split(',')]
+    float_list = [float(s) for s in float_str.replace('[', '').replace(']', '').replace(' ', '').split(',') if s != '']
     return float_list
 
 
