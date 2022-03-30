@@ -17,27 +17,35 @@ class TestHelper(unittest.TestCase):
         self.assertEqual(1234567890, get_digits(value, 10))
 
     def test_route_str_to_list(self):
-        route_list = [[-8.58, 41.14], [-8.5, 41.1]]
-        route_str = str(route_list)
-        self.assertEqual(route_list, parser.route_str_to_list(route_str))
+        for route_list in [
+            [[-8.58, 41.14], [-8.5, 41.1]],
+            []
+        ]:
+            self.assertEqual(route_list, parser.route_str_to_list(str(route_list)))
 
     def test_timestamps_str_to_list(self):
-        timestamps_list = [pd.Timestamp('2020-01-01 10:00:00'), pd.Timestamp('2020-01-02 15:00:00')]
-        timestamps_str = str(timestamps_list)
-        self.assertEqual(timestamps_list, parser.timestamps_str_to_list(timestamps_str))
+        for timestamps_list in [
+            [pd.Timestamp('2020-01-01 10:00:00'), pd.Timestamp('2020-01-02 15:00:00')],
+            []
+        ]:
+            self.assertEqual(timestamps_list, parser.timestamps_str_to_list(str(timestamps_list)))
 
     def test_float_str_to_list(self):
-        float_list = [1, 2.5, 0, 7]
-        float_str = str(float_list)
-        self.assertEqual(float_list, parser.float_str_to_list(float_str))
+        for float_list in [
+            [1, 2.5, 0, 7],
+            []
+        ]:
+            self.assertEqual(float_list, parser.float_str_to_list(str(float_list)))
 
     def test_routes_str_to_list(self):
         route_degrees = Route([[-8.58, 41.14], [-8.5, 41.1]], coordinates_unit='degrees')
         route_radians = Route([[2, 2], [1, 1]])
 
-        route_list = [route_radians, route_radians]
-        route_str = str(route_list)
-        self.assertEqual(route_list, parser.routes_str_to_list(route_str))
+        for routes_list in [
+            [route_radians, route_radians],
+            []
+        ]:
+            self.assertEqual(routes_list, parser.routes_str_to_list(str(routes_list)))
 
         route_list = [route_degrees, route_degrees]
         route_str = str(route_list)
