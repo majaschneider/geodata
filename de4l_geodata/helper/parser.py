@@ -42,14 +42,11 @@ def points_str_to_list(points_str):
         The point collection converted into list format.
     """
     route_list = []
-    try:
-        route_str = points_str.replace(" ", "").replace("],[", "];[").split(";")
-        for point in route_str:
-            point = point.replace("[", "").replace("]", "").split(",")
+    route_str = points_str.replace(" ", "").replace("],[", "];[").split(";")
+    for point in route_str:
+        point = point.replace("[", "").replace("]", "").split(",")
+        if point[0] != '' and point[1] != '':
             route_list.append([float(point[0]), float(point[1])])
-    except Exception:
-        warnings.warn("An error occurred during parsing of route from string to list. An empty list will be "
-                      "returned.")
     return route_list
 
 
