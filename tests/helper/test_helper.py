@@ -49,4 +49,3 @@ class TestHelper(unittest.TestCase):
         route_str = str(route_list)
         with self.assertRaises(Exception):
             parser.routes_str_to_list(route_str, coordinates_unit='radians')
-
