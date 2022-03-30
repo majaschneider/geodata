@@ -31,7 +31,7 @@ class TestHelper(unittest.TestCase):
         float_str = str(float_list)
         self.assertEqual(float_list, parser.float_str_to_list(float_str))
 
-    def test_route_str_to_list(self):
+    def test_routes_str_to_list(self):
         route_degrees = Route([[-8.58, 41.14], [-8.5, 41.1]], coordinates_unit='degrees')
         route_radians = Route([[2, 2], [1, 1]])
 
