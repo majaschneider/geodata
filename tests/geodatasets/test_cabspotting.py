@@ -3,8 +3,8 @@ import datetime as dt
 import os
 
 import pandas as pd
-from de4l_geodata.geodata.point_t import PointT
-from de4l_geodata.geodatasets.cabspotting import CabspottingDataset
+from geodata.geodata.point_t import PointT
+from geodata.geodatasets.cabspotting import CabspottingDataset
 
 
 class TestCabspottingDataset(unittest.TestCase):

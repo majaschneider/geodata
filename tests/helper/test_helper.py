@@ -2,9 +2,9 @@ import unittest
 
 import pandas as pd
 
-from de4l_geodata.helper.helper import get_digits
-from de4l_geodata.helper import parser
-from de4l_geodata.geodata.route import Route
+from geodata.helper.helper import get_digits
+from geodata.helper import parser
+from geodata.geodata.route import Route
 
 
 class TestHelper(unittest.TestCase):

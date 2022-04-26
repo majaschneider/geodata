@@ -5,8 +5,8 @@ import warnings
 
 import pandas as pd
 
-from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point
+from geodata.geodata.route import Route
+from geodata.geodata.point import Point
 
 
 def route_str_to_list(route_str):

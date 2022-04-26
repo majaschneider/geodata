@@ -1,8 +1,8 @@
 import unittest
 
 import pandas as pd
-from de4l_geodata.geodata.point_t import PointT
-from de4l_geodata.geodatasets.geolife import GeoLifeDataset
+from geodata.geodata.point_t import PointT
+from geodata.geodatasets.geolife import GeoLifeDataset
 
 
 class TestGeoLifeDataset(unittest.TestCase):

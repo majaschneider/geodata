@@ -6,9 +6,9 @@ import dateutil.parser
 import torch
 import pandas as pd
 
-from de4l_geodata.geodatasets.de4l import De4lSensorDataset
-from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point_t import PointT
+from geodata.geodatasets.de4l import De4lSensorDataset
+from geodata.geodata.route import Route
+from geodata.geodata.point_t import PointT
 
 
 class TestDe4lSensorDataset(unittest.TestCase):

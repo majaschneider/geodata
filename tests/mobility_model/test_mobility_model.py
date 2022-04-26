@@ -4,9 +4,9 @@ import unittest
 import pandas as pd
 from geopy.geocoders import Nominatim
 
-from de4l_geodata.mobility_model import mobility_model
-from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset as Td
-from de4l_geodata.helper import parser
+from geodata.mobility_model import mobility_model
+from geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset as Td
+from geodata.helper import parser
 
 
 # todo: test all mobility model methods, when ors and nominatim are available from GitLab

@@ -12,9 +12,9 @@ from torch.nn.functional import one_hot
 from torch.nn import ZeroPad2d
 from torch.utils.data import Dataset
 
-from de4l_geodata.helper import parser
-from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import get_distance
+from geodata.helper import parser
+from geodata.geodata.route import Route
+from geodata.geodata.point import get_distance
 
 
 class TaxiServiceTrajectoryDataset(Dataset):

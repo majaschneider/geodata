@@ -4,8 +4,8 @@ import warnings
 
 import torch
 import numpy as np
-from de4l_geodata.geodata.point import Point, get_distance
-from de4l_geodata.geodata.point_t import PointT
+from geodata.geodata.point import Point, get_distance
+from geodata.geodata.point_t import PointT
 
 
 class Route(list):

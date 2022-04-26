@@ -2,7 +2,7 @@
 """
 import pandas
 
-from de4l_geodata.geodata.point import Point, get_interpolated_point as get_interpolated
+from geodata.geodata.point import Point, get_interpolated_point as get_interpolated
 
 
 def get_interpolated_point(start_point, end_point, ratio):

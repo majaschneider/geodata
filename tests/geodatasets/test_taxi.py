@@ -2,8 +2,8 @@ import math
 import unittest
 import torch
 import pandas as pd
-from de4l_geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset
-from de4l_geodata.geodata.route import Route
+from geodata.geodatasets.taxi import TaxiServiceTrajectoryDataset
+from geodata.geodata.route import Route
 
 
 class TestTaxiServiceTrajectoryDataset(unittest.TestCase):

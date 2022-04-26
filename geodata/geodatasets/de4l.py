@@ -11,9 +11,9 @@ import torch
 from torch.utils.data import Dataset
 from torch.nn.functional import one_hot
 
-from de4l_geodata.geodata.point_t import PointT
-from de4l_geodata.geodata.point import Point
-from de4l_geodata.geodata.route import Route
+from geodata.geodata.point_t import PointT
+from geodata.geodata.point import Point
+from geodata.geodata.route import Route
 
 
 class De4lSensorDataset(Dataset):

@@ -1,4 +1,4 @@
-# de4l-geodata
+# geodata
 
 Library for working with points and routes based on geographic coordinates.
 Provides convenience methods for importing and preprocessing de4l (https://de4l.io) specific datasets.
@@ -8,7 +8,7 @@ Provides convenience methods for importing and preprocessing de4l (https://de4l.
 
 Install this package in your repository via pip:
 ```bash
-pip install git+ssh://git@git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata.git
+pip install git+https://github.com/majaschneider/geodata.git
 ```
 This assumes you already have PyTorch installed with whatever requirements you need (see [here](https://pytorch.org/get-started/locally/) for further info).
 

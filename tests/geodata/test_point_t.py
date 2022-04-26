@@ -4,7 +4,7 @@ import datetime
 
 import pandas
 
-from de4l_geodata.geodata.point_t import PointT, get_interpolated_point
+from geodata.geodata.point_t import PointT, get_interpolated_point
 
 
 class TestPointMethods(unittest.TestCase):

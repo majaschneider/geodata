@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-from de4l_geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
-from de4l_geodata.helper.helper import get_digits
+from geodata.geodata.point import Point, get_bearing, get_distance, get_interpolated_point
+from geodata.helper.helper import get_digits
 
 
 class TestPointMethods(unittest.TestCase):

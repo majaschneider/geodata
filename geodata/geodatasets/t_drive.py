@@ -6,8 +6,8 @@ The source is a dataset with taxi data collected by Microsoft in Beijing in 2008
 import pandas as pd
 from torch.utils.data import Dataset
 
-from de4l_geodata.geodata.point_t import PointT
-from de4l_geodata.geodata.route import Route
+from geodata.geodata.point_t import PointT
+from geodata.geodata.route import Route
 
 
 class TDriveDataset(Dataset):

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "de4l-geodata"
+name = "geodata"
 version = "0.3.1"
 description = "A package for working with geolocations"
 repository = "https://github.com/majaschneider/geodata.git"
@@ -20,7 +20,7 @@ numpy = "^1.22.2"
 pandas = "^1.4.0"
 haversine = "^2.5.1"
 torch = {version = "~1.9.0", optional = true}
-de4l_detour_detection = { git = "https://github.com/majaschneider/detour-detection.git", branch = "main"}
+detour_detection = { git = "https://github.com/majaschneider/detour-detection.git", branch = "main"}
 
 [tool.poetry.extras]
 torch = ["torch"]

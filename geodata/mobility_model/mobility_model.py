@@ -2,11 +2,11 @@ import sqlite3
 
 import pandas as pd
 from geopy.geocoders import Nominatim
-from de4l_detour_detection.detour_detection import get_directions_for_route
+from detour_detection.detour_detection import get_directions_for_route
 
-from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point
-from de4l_geodata.helper import parser
+from geodata.geodata.route import Route
+from geodata.geodata.point import Point
+from geodata.helper import parser
 
 
 def execute_sql(sql, db, data=None):

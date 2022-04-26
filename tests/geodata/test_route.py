@@ -7,9 +7,9 @@ import numpy as np
 import torch
 from pandas import Timestamp, Timedelta
 
-from de4l_geodata.geodata.route import Route
-from de4l_geodata.geodata.point import Point, get_distance
-from de4l_geodata.geodata.point_t import PointT
+from geodata.geodata.route import Route
+from geodata.geodata.point import Point, get_distance
+from geodata.geodata.point_t import PointT
 
 
 class TestPointMethods(unittest.TestCase):

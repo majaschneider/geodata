@@ -7,8 +7,8 @@ import datetime as dt
 import pandas as pd
 from torch.utils.data import Dataset
 
-from de4l_geodata.geodata.point_t import PointT
-from de4l_geodata.geodata.route import Route
+from geodata.geodata.point_t import PointT
+from geodata.geodata.route import Route
 
 
 class CabspottingDataset(Dataset):
