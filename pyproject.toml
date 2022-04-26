@@ -2,7 +2,7 @@
 name = "de4l-geodata"
 version = "0.3.1"
 description = "A package for working with geolocations"
-repository = "https://git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata"
+repository = "https://github.com/majaschneider/geodata.git"
 authors = ["Maja Schneider","Lukas Gehrke"]
 license = "MIT"
 readme = "README.md"
@@ -20,7 +20,7 @@ numpy = "^1.22.2"
 pandas = "^1.4.0"
 haversine = "^2.5.1"
 torch = {version = "~1.9.0", optional = true}
-de4l_detour_detection = { git = "ssh://git@git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-detour-detection.git", branch = "main"}
+de4l_detour_detection = { git = "https://github.com/majaschneider/detour-detection.git", branch = "main"}
 
 [tool.poetry.extras]
 torch = ["torch"]
@@ -31,8 +31,8 @@ pylint = "^2.12.2"
 
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata/-/issues"
-"Source" = "https://git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata"
+"Bug Tracker" = "https://github.com/majaschneider/geodata/issues"
+"Source" = "https://github.com/majaschneider/geodata.git"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
