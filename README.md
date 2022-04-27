@@ -14,7 +14,7 @@ This assumes you already have PyTorch installed with whatever requirements you n
 
 To also get PyTorch with whatever CUDA version it ships naturally you can use:
 ```bash
-pip install git+ssh://git@git.informatik.uni-leipzig.de/scads/de4l/privacy/de4l-geodata.git#egg=de4l_geodata[torch]
+pip install git+https://github.com/majaschneider/geodata.git#egg=geodata[torch]
 ```
 
 # Development
